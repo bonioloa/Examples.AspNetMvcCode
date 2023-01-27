@@ -1,0 +1,142 @@
+﻿@model UserEditSupervisorViewModel
+
+@inject IMainLocalizer _localizer
+
+<div class="row row-line-after">
+    <div class="col xl12 l12 s12 m12">
+        <div class="card-panel">
+
+            <h3>Modifica dati anagrafici</h3>
+
+            <form asp-controller="@MvcComponents.CtrlAdministrationUsersPost"
+                  asp-action="@MvcComponents.ActUserEditSupervisorUserDataPost"
+                  asp-antiforgery="true" method="post"
+                  id="form-supervisor-data-edit"
+                  autocomplete="off"
+                  >
+
+                @*non usare id per questo campo, c'è rischio collisione con le altre form della view chiamante*@
+                <input type="hidden" name="@ParamsNames.UserId" value="@Model.UserId" />
+
+                <div class="row row-no-line-after">
+                    <div class="input-field col s12 m12 l12 xl12">
+                        @await Component.InvokeAsync(
+                            typeof(FieldInputTextSimpleComp)
+                            , new FieldViewModel()
+                                {
+                                    FieldType = FieldType.InputTextSimple,
+                                    FieldName = ParamsNames.LoginCode,
+                                    HideMandatorySymbol = true,
+                                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldUserLogin)].ToString() + " (Non modificabile)"),
+                                    Value = Model.Login,
+                                    IsDisabled = true,//never editable in any case for now
+                                    IsReadOnly = true,
+                                }
+                        )
+                    </div>
+                </div>
+
+                <div class="row row-no-line-after">
+                    <div class="input-field col s12 m12 l12 xl12">
+
+                        @await Component.InvokeAsync(
+                            typeof(FieldInputTextSimpleComp)
+                            , new FieldViewModel()
+                                {
+                                    FieldType = FieldType.InputTextSimple,
+                                    FieldName = nameof(UserEditSupervisorSaveViewModel.Nome),
+                                    HideMandatorySymbol = true,
+                                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldName)]),
+                                    Value = Model.Name,
+                                }
+                        )
+                    </div>
+                </div>
+
+                <div class="row row-no-line-after">
+                    <div class="input-field col s12 m12 l12 xl12">
+
+                        @await Component.InvokeAsync(
+                            typeof(FieldInputTextSimpleComp)
+                            , new FieldViewModel()
+                                {
+                                    FieldType = FieldType.InputTextSimple,
+                                    FieldName = nameof(UserEditSupervisorSaveViewModel.Cognome),
+                                    HideMandatorySymbol = true,
+                                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldSurname)]),
+                                    Value = Model.Surname,
+                                }
+                        )
+                    </div>
+                </div>
+                
+                <div class="row row-no-line-after">
+                    <div class="input-field col s12 m12 l12 xl12">
+
+                        @await Component.InvokeAsync(
+                            typeof(FieldInputTextSimpleComp)
+                            , new FieldViewModel()
+                                {
+                                    FieldType = FieldType.InputTextSimple,
+                                    InputSimpleType = InputSimpleType.Email,
+                                    FieldName = nameof(UserEditSupervisorSaveViewModel.Email),
+                                    HideMandatorySymbol = true,
+                                    Description = 
+                                        new HtmlString(
+                                            _localizer[nameof(LocalizedStr.SharedFieldEmail)].ToString() 
+                                            + " (per motivi di sicurezza la modifica dell'email comporterà l'invio di una notifica sia al vecchio indirizzo che al nuovo appena impostato)"
+                                        ),
+                                    Value = Model.Email,
+                                }
+                        )
+                    </div>
+                </div>
+
+                <div class="row row-no-line-after">
+                    <div class="input-field col s12 m12 l12 xl12">
+
+                        @await Component.InvokeAsync(
+                            typeof(FieldInputRadioComp)
+                            , new FieldViewModel()
+                                {
+                                    FieldType = FieldType.OptionsRadio,
+                                    FieldName = nameof(UserEditSupervisorSaveViewModel.ProfiloEsclusivo),
+                                    HideMandatorySymbol = true,
+                                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelRolesExclusive)]),
+                                    Options = Model.RolesSelection.ExclusiveRolesFound.OrderBy(role => role.Value)
+                                                                                      .ToList()
+                                }
+                        )
+                    </div>
+                </div>
+
+                <div class="row row-no-line-after optional-profiles">@* optional-profiles: custom empty class for hide/show*@
+                    <div class="input-field col s12 m12 l12 xl12">
+
+                        @await Component.InvokeAsync(
+                            typeof(FieldInputSelectComp)
+                            , new FieldViewModel()
+                                {
+                                    FieldType = FieldType.OptionsSelectMultiple,
+                                    FieldName = nameof(UserEditSupervisorSaveViewModel.Profili),
+                                    HideMandatorySymbol = true,
+                                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelRoles)]),
+                                    Options = Model.RolesSelection.SupervisorRolesFound.OrderBy(role => role.Value)
+                                                                                       .ToList()
+                                }
+                        )
+                    </div>
+                </div>
+
+                <partial name="@MvcComponents.SharedPartialButtonsBackSubmit"
+                         model=@(
+                                 new ButtonsBackSubmitViewModel()
+                                 {
+                                     Id = "submit-supervisor-data-edit",
+                                     SubmitLabel = "Modifica dati",
+                                     HideBackButtonComponent = true,
+                                 }) />
+            </form>
+        </div>
+    </div>
+</div>

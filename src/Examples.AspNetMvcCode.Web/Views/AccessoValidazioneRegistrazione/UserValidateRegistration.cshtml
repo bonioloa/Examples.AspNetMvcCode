@@ -1,0 +1,94 @@
+﻿@model UserValidateRegistrationViewModel
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+
+@{
+    Layout = MvcComponents.TemplatePanelPageFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.UserValidateRegistrationPageTitle)]);
+    ViewData.SetLogo(InfoAndLogo.CentralPanelLogoProduct);//this is a page directly accessible
+    ViewData.SetShowLanguageSelector(true);
+    ViewData.SetUseCaptcha(true);
+}
+@section styles
+{
+}
+@section scripts
+{
+}
+
+<div class="row row-line-after">
+    <div class="col xl12 l12 m12 s12 center-align">
+        <h5 class="simple-panel-title "
+            >@_localizer[nameof(LocalizedStr.UserValidateRegistrationPageTitle)]</h5>
+    </div>
+</div>
+<div class="row row-line-after">
+    <div class="col xl12 l12 m12 s12">
+        @_htmlLocalizer[nameof(HtmlLocalization.UserValidateRegistrationHtmlMessage)]
+    </div>
+</div>
+
+<form asp-controller="@MvcComponents.CtrlAccessValidationRegistration" 
+      asp-action="@MvcComponents.ActValidateRegistrationPost"
+      asp-antiforgery="true"
+      method="post" 
+      id="form-captcha-protected"
+      class = ""
+      autocomplete="off">
+
+    <div class="row row-line-before row-no-line-after">
+
+        <div class="input-field col xl12 l12 m12 s12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputTextSimpleComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputTextSimple,
+                        InputSimpleType = InputSimpleType.Text,
+                        FieldName = nameof(Model.TenantToken),
+                        HideMandatorySymbol = true,
+                        IsMandatory = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldTenantToken)]),
+                        Value = Model.TenantToken,
+                    }
+            )
+        </div>
+    </div>
+
+
+    <div class="row row-no-line-after">
+        <div class="input-field col xl12 l12 m12 s12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputTextSimpleComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputTextSimple,
+                        InputSimpleType = InputSimpleType.Text,
+                        FieldName = nameof(Model.ValidationCode),
+                        HideMandatorySymbol = true,
+                        IsMandatory = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldValidationCode)]),
+                        Value = Model.ValidationCode,
+                    }
+            )
+        </div>
+    </div>
+
+
+    @await Component.InvokeAsync(typeof(CaptchaComp))
+
+
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@(
+                        new ButtonsBackSubmitViewModel()
+                        {
+                            Id = "submit-validate-registration",
+                            SubmitLabel = _localizer[nameof(LocalizedStr.UserValidateRegistrationSubmit)],
+                            HideBackButtonComponent = false,
+                            BackButtonUrlType = BackUrlConfig.TenantLogin,
+                        })/>
+</form>

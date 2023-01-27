@@ -1,0 +1,77 @@
+﻿@model FileInputBasicViewModel
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+
+@{
+    string tmpNameFileInput = Model.FieldName + "_" + "attachments";
+    string tmpIdFilePath = Model.FieldName + AppConstants.HtmlNameFileFieldSuffix;
+    string tmpAttrAttachmentFieldName = $"{WebAppConstants.HtmlAttrAttachmentFieldName}={Model.FieldName}";
+    string tmpAttrPathsFieldName = $"{WebAppConstants.HtmlAttrAttachmentPathsFieldName}={tmpIdFilePath}";
+    string tmpAttrMultiple = Model.ForceSingleFile ? string.Empty : WebAppConstants.HtmlAttrMultiple;
+    string tmpAttrAccept = 
+        Model.AcceptFileExtensions.HasValues() 
+        ? $"{WebAppConstants.HtmlAttrAccept} = '.{string.Join($"{CodeConstants.CommaStr}{CodeConstants.DotStr}", WebAppConstants.HtmlAttrAccept) }'"
+        : string.Empty;
+
+    string tmpAcceptFileTypes =
+        Model.AcceptFileExtensions.HasValues()
+        ? $"accept={tmpIdFilePath}" : string.Empty;
+
+    string tmpInputFileAdditionalAttributes = "";
+    if(Model.InputFileAdditionalAttributes.HasValues())
+    {
+        foreach(string attributeKey in Model.InputFileAdditionalAttributes.Keys)
+        {
+            tmpInputFileAdditionalAttributes +=
+                CodeConstants.Space 
+                + $"{attributeKey}={Model.InputFileAdditionalAttributes[attributeKey]}";
+        }
+    }
+    
+
+    string tmpInputFileAdditionalClasses =
+        Model.AdditionalClasses.HasValues()
+        ? string.Join(CodeConstants.Space, Model.AdditionalClasses)
+        : string.Empty;
+
+    string tmpRequired = Model.IsMandatory ? WebAppConstants.HtmlAttrRequired : string.Empty;
+    string tmpMandatoryClass = Model.IsMandatoryWhenEmpty ? "att-required" : string.Empty;
+}
+
+
+@* NOTES: 
+    -we always allow upload of MULTIPLE files
+    -never load previously uploaded files in field value, build delete form links outside containing form 
+    because forms must never be nested inside each other, form validation stops working
+    *@
+<p class="site-color-additional-text"
+    >@Model.Description</p>
+<div class="file-field input-field spacing-no-animation">
+    @*do not use other button classes here or the drag and drop on field will stop working*@
+	<div class="btn @WebAppConstants.HtmlClassButtonPrimary "> 
+		<span>@_localizer[nameof(LocalizedStr.SharedFileAttachmentButton)]</span>
+		<input type="file" 
+               @tmpAttrMultiple
+               class="attachment ignore-validation @tmpInputFileAdditionalClasses" 
+               name="@tmpNameFileInput"
+               @tmpAttrAttachmentFieldName
+               @tmpAttrPathsFieldName
+               @tmpInputFileAdditionalAttributes
+               @tmpAcceptFileTypes
+               @(Model.IsReadOnly ? WebAppConstants.HtmlAttrReadOnly : string.Empty)
+               @(Model.IsDisabled ? WebAppConstants.HtmlAttrDisabled : string.Empty)
+               > 
+        @* TODO: set 200mb total files size limit @WebAppConstants.MaxFilesUploadInBytes*@
+	</div>
+	<div class="file-path-wrapper">
+		<input type="text" class="get file-path validate @tmpMandatoryClass" 
+               id="@tmpIdFilePath"
+               name="@tmpIdFilePath"
+               @(Model.IsReadOnly ? WebAppConstants.HtmlAttrReadOnly : string.Empty)
+               @(Model.IsDisabled ? WebAppConstants.HtmlAttrDisabled : string.Empty)
+               @tmpRequired/>
+        <span id="@tmpIdFilePath-error" 
+              class="helper-text" data-error=""></span>
+	</div>
+</div>

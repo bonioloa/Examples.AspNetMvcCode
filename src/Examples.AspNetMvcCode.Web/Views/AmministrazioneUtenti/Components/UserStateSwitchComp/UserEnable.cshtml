@@ -1,0 +1,29 @@
+﻿@model UserEditSupervisorViewModel
+
+<div class="row row-line-after">
+    <div class="col xl12 l12 s12 m12">
+        <div class="card-panel">
+            Con questo comando l'utente verrà posto in stato attivato e gli verrà inviata automaticamente una email di notifica con la propria utenza e password <br />
+            Dopo l'attivazione sarà possibile procedere con eventuali modifiche anagrafiche e aggiunta profili di lavorazione
+            <br />
+            <br />
+            <form asp-controller="@MvcComponents.CtrlAdministrationUsersPost"
+                  asp-action="@MvcComponents.ActUserEditSupervisorEnablePost"
+                  asp-antiforgery="true" method="post"
+                  id="form-supervisor-enable">
+
+                @*non usare id per questo campo, c'è rischio collisione con le altre form della view chiamante*@
+                <input type="hidden" name="@ParamsNames.UserId" value="@Model.UserId" />
+
+                <partial name="@MvcComponents.SharedPartialButtonsBackSubmit"
+                         model=@(
+                             new ButtonsBackSubmitViewModel()
+                             {
+                                 Id = "submit-supervisor-switch-state",
+                                 SubmitLabel = "Attiva utente",
+                                 HideBackButtonComponent = true,
+                             }) />
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,65 @@
+﻿@model UserLogin2faViewModel
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+
+@{
+    Layout = MvcComponents.TemplatePanelPageFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.UserLogin2faTitle)]);
+    ViewData.SetLogo(InfoAndLogo.CentralPanelLogoTenant);
+    ViewData.SetShowLanguageSelector(true);
+    ViewData.SetUseCaptcha(true);
+}
+@section styles
+{
+}
+@section scripts
+{
+}
+ 
+
+<div class="row row-line-after">
+    <div class="col s12 m12 l12 xl12 ">
+        @_htmlLocalizer[nameof(HtmlLocalization.UserLogin2faMessage)]
+    </div>
+</div>
+
+<form asp-controller="@MvcComponents.CtrlAccess2fa" 
+      asp-action="@MvcComponents.ActLogin2faPost"
+      asp-antiforgery="true" method="post" 
+      id="form-captcha-protected"
+      class = ""
+      autocomplete="off">
+
+    <div class="row row-line-after">
+        <div class="input-field col xl12 l12 m12 s12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputTextSimpleComp)
+                , new FieldViewModel()
+                    {
+                        FieldName = nameof(Model.EmailAuthenticationCode),
+                        IsMandatory = true,
+                        HideMandatorySymbol = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.UserLogin2faCode)]),
+                        FieldType = FieldType.InputTextSimple,
+                    }
+            )
+        </div>
+    </div>
+
+    
+    @await Component.InvokeAsync(typeof(CaptchaComp))
+    
+
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@(
+                        new ButtonsBackSubmitViewModel()
+                        {
+                            Id = "submit-login2fa",
+                            SubmitLabel = _localizer[nameof(LocalizedStr.UserLogin2faButton)],
+                            HideBackButtonComponent = false,
+                            BackButtonUrlType = BackUrlConfig.TenantLogin,
+                        })/>
+</form>

@@ -1,0 +1,175 @@
+﻿@model ReportExportViewModel
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.ReportPageTitle)]);
+
+    IDictionary<string, string> routeVars = new Dictionary<string, string>();
+}
+@section styles
+{   
+}
+@section scripts
+{
+<script>
+    var SharedConstReportPage = Immutable.Map({
+            'InputProcessAll': '@ParamsNames.ProcessAll',
+            'InputProcesses': '@ParamsNames.ProcessIdList',
+            }
+        );
+    </script>
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = PathsStaticFilesRoot.AppPathScriptsPages
+                             , FileName= "report"
+                         })/>
+}
+
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@_localizer[nameof(LocalizedStr.ReportPageTitle)].ToString()"/>
+
+
+<form asp-controller="@MvcComponents.CtrlReporting"
+      asp-action="@MvcComponents.ActReportingDataExport"
+      method="get"
+      autocomplete="off"> @*get does not need anti forgery*@
+
+    <div id="processes-filter-master" 
+         class="row row-line-x2-after">
+        <div class="input-field col s12 m12 l12 xl12">           
+            @{
+                FieldViewModel checkAllProcesses = new FieldViewModel()
+                {
+                    FieldType = FieldType.OptionsCheckBox,
+                    FieldName = ParamsNames.ProcessAll,
+                    Description =  _htmlLocalizer[nameof(HtmlLocalization.ReportCheckAllProcessesLabel)],
+                    Options = new List<OptionViewModel>() {
+                        new OptionViewModel() 
+                        { 
+                            Selected = Model.AllProcesses,
+                            Value = AppConstants.FilterDefaultValueAllAvailableProcesses.ToString(),
+                            Description = new HtmlString(_localizer[nameof(LocalizedStr.ReportAllProcesses)])
+                        } 
+                    },
+                };
+            }
+
+            @await Component.InvokeAsync(typeof(FieldInputCheckComp), checkAllProcesses)
+
+        </div>
+    </div>
+
+
+    <div id="processes-filter-slave" 
+         class="row row-line-after">
+        <div class="input-field col s12 m12 l12 xl12">   
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputSelectComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.OptionsSelectMultiple,
+                        FieldName = ParamsNames.ProcessIdList,
+                        Options = Model.ProcessSelect,
+                        Description = _htmlLocalizer[nameof(HtmlLocalization.ReportProcessesSubset)],
+                        IsMandatory = true,
+                    }
+            )
+        </div>
+    </div>
+
+
+    <div class="row row-line-after">
+        <div class="input-field col s12 m6 l6 xl6">
+            @await Component.InvokeAsync(
+                typeof(FieldInputDateComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputDate,
+                        FieldName = ParamsNames.DateSubmitFrom,
+                        Value = Model.DateSubmitFrom.ToStringDateSortableInvariant(),
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitFrom)]),
+                    }
+            )
+        </div>
+
+        <div class="input-field col s12 m6 l6 xl6">
+            @await Component.InvokeAsync(
+                typeof(FieldInputDateComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputDate,
+                        FieldName = ParamsNames.DateSubmitTo,
+                        Value = Model.DateSubmitTo.ToStringDateSortableInvariant(),
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitTo)]),
+                    }
+            )
+        </div>
+    </div>
+
+
+
+    @if(Model.EnableDateExpirationFilter)
+    {
+        <div class="row row-line-after">
+            <div class="input-field col s12 m6 l6 xl6">
+                @await Component.InvokeAsync(
+                    typeof(FieldInputDateComp)
+                    , new FieldViewModel()
+                        {
+                            FieldType = FieldType.InputDate,
+                            FieldName = ParamsNames.DateExpirationFrom,
+                            Value = Model.DateExpirationFrom.ToStringDateSortableInvariant(),
+                            Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationFrom)]),
+                        }
+                )
+            </div>
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @await Component.InvokeAsync(
+                    typeof(FieldInputDateComp)
+                    ,  new FieldViewModel()
+                        {
+                            FieldType = FieldType.InputDate,
+                            FieldName = ParamsNames.DateExpirationTo,
+                            Value = Model.DateExpirationTo.ToStringDateSortableInvariant(),
+                            Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationTo)]),
+                        }
+                )
+            </div>
+        </div>
+    }
+    
+
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@(
+                         new ButtonsBackSubmitViewModel()
+                         {
+                             Id = "btn-get-data-to-excel",
+                             SubmitLabel = _localizer[nameof(LocalizedStr.ReportButtonGetExcel)],
+                             HideBackButtonComponent = true,
+                             BackButtonUrlType = BackUrlConfig.Missing, //back button is hidden
+                             CssClasses = new List<string>() { "no-preloader" },
+                         })/>
+
+
+
+    @* we can't use redirect to show this message *@
+    @if(Model.ShowMessageNoResultsFound)
+    {
+        <div id="report-no-results-warning"
+             class="row row-line-x2-before row-line-x2-after">
+            <div class="col s12 m12 l12 xl12 site-color-warn">        
+                @_localizer[nameof(LocalizedStr.SharedReportMessageNoResults)]
+            </div>
+        </div>
+    }
+</form>

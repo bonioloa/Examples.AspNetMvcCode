@@ -1,0 +1,72 @@
+﻿@inject IMainLocalizer _localizer
+
+@{
+    Layout = MvcComponents.LayoutMainFile;
+
+    InfoAndLogo leftPanel = ViewData.GetLeftPanel();
+    InfoAndLogo rightPanel = ViewData.GetRightPanel();
+}
+@section styles
+{
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                        { 
+                            Type = IncludeType.Css
+                            , BasePath = PathsStaticFilesRoot.AppPathContentPages
+                            , FileName= "login"
+                        })/>
+
+    @RenderSection(MvcComponents.SectionStyles) 
+}
+@section scripts
+{
+    @RenderSection(MvcComponents.SectionScripts)
+}
+
+
+<div class="row col-container force-zero-margin background-dg">
+
+
+    @await Component.InvokeAsync(
+        typeof(ProductTenantInfoAndLogoComp)
+        , new InfoAndLogoInputViewModel(leftPanel)
+    )
+    
+
+    <div class="col xl7 l7 m12 s12 background-dg right-align valign-wrapper main-col no-padding">
+    
+        <div class="row row-no-line-after access-panel-container center-align all-width">     
+            <div class="col s12 m12 l12 xl12 panel-border-radius background-white panel-content-padding">
+            
+                <div class="row row-line-after">
+                    <div class="col s12 m12 l12 xl12">
+
+
+                        @await Component.InvokeAsync(typeof(PoliciesLinksComp))
+
+  
+                        <div class="right">
+
+                            @await Component.InvokeAsync(typeof(LanguageSelectorComp))
+                        </div>
+            
+                     </div>
+                </div>
+
+
+                @await Component.InvokeAsync(
+                    typeof(ProductTenantInfoAndLogoComp)
+                    , new InfoAndLogoInputViewModel(rightPanel)
+                )
+
+                
+                <div class="row-half-line-before row-line-after line-element">
+                </div>
+
+
+                @RenderBody()
+
+            </div>
+        </div>
+    </div>
+</div>

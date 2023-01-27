@@ -1,0 +1,74 @@
+﻿@model string
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+
+@{
+    Layout = MvcComponents.TemplateSplitPageFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.TenantTokenLoginPageTitle)]);
+    ViewData.SetLeftPanel(InfoAndLogo.LeftPanelProduct);
+    ViewData.SetRightPanel(InfoAndLogo.RightPanelLogoProduct);
+}
+@section styles
+{
+}
+@section scripts
+{
+    <script>
+        var SharedConstTenantLoginPage = Immutable.Map({
+            'formTenantId': '@WebAppConstants.HtmlIdTokenForm'
+            });
+    </script>
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = PathsStaticFilesRoot.AppPathScriptsPages
+                             , FileName= "tenant-login"
+                         })/>
+}
+
+
+<div class="row row-line-x2-before row-no-line-after ">
+    <div class="col xl12 l12 m12 s12 left-align "> 
+        @_htmlLocalizer[nameof(HtmlLocalization.TenantTokenLoginHtmlLabel)]
+    </div>
+</div>
+
+<form asp-controller="@MvcComponents.CtrlAccessMain" 
+        asp-action="@MvcComponents.ActLoginTenantPost"
+        asp-antiforgery="true"
+        method="post"
+        id="@WebAppConstants.HtmlIdTokenForm"
+        autocomplete="off">
+
+    <div class="row row-no-line-before row-no-line-after">                            
+        <div class="input-field col xl12 l12 m12 s12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputTextSimpleComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputTextSimple,
+                        InputSimpleType = InputSimpleType.Text,
+                        FieldName = ParamsNames.TenantToken,
+                        Value = Model,
+                        IsMandatory = true,
+                        HideMandatorySymbol = true,
+                    }
+            )
+        </div>
+    </div>
+
+
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@(
+                        new ButtonsBackSubmitViewModel()
+                        {
+                            Id = "submit-tenant-token",
+                            SubmitLabel = _localizer[nameof(LocalizedStr.TenantTokenLoginSubmitButton)],
+                            HideBackButtonComponent = true,
+                            BackButtonUrlType = BackUrlConfig.Missing,
+                        })/>
+</form>

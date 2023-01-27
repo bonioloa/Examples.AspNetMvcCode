@@ -1,0 +1,73 @@
+﻿@model InputControlViewModel
+
+@inject MainLocalizer _localizer
+
+@{ 
+    string tmpAttributeIsOption = $"{WebAppConstants.HtmlAttrFieldHasOptions}={Model.FieldName}";
+    string tmpAttributeChoiceType = $"{WebAppConstants.HtmlAttrFieldChoiceType}={Model.ControlType.ToString()}";
+    string tmpAttributeHasRelatedField = string.Empty;
+    if (Model.RelatedFieldHtmlLabel.HasValue())
+    {
+        tmpAttributeHasRelatedField = WebAppConstants.HtmlAttrFieldHasRelated;
+    }
+    string tmpMandatorySymbol =
+            Model.IsMandatory && !Model.HideMandatorySymbol && Model.Description.HasValue()
+            ? WebAppConstants.HtmlMandatorySymbol
+            : string.Empty;
+    string tmpAttributeDivForField =  $"{WebAppConstants.HtmlAttrDivForField}={Model.FieldName}";
+    string tmpHiddenLabel = string.Empty;
+    if(Model.AdditionalClasses.StringHasValue() 
+        && Model.AdditionalClasses.ContainsInvariant(WebAppConstants.HtmlClassHidden))
+    {
+        tmpHiddenLabel = WebAppConstants.HtmlClassHidden;
+    }
+    string tmpAttributeDependentField = string.Empty;
+    if(Model.DependingField.StringHasValue())
+    {
+        tmpAttributeDependentField = $"{WebAppConstants.HtmlAttrHasDependent}={Model.DependingField}";
+    }
+}
+
+@if(Model.UseFixedLabel)
+{
+    //NOTE: select is displayed by materialize as an input so we need to use the class for inputs
+    <div class="placeholder-field div-as-label-input site-color-input-label @tmpHiddenLabel"
+         @tmpAttributeDivForField @tmpAttributeIsOption @tmpAttributeHasRelatedField 
+         @tmpAttributeChoiceType @tmpAttributeDependentField>
+        <span>@Model.Description@tmpMandatorySymbol</span>
+    </div>
+}
+<!select id="@Model.FieldName"
+         name="@Model.FieldName" 
+         class="get validate @Model.AdditionalClasses"
+         @(Model.IsMandatory ? WebAppConstants.HtmlAttrRequired : string.Empty)
+         @(Model.IsMultiple ? WebAppConstants.HtmlAttrMultiple : string.Empty)
+         >
+
+    @*NOTE by construction all selects must have a selected value. If no value was provided, model should have default value selected
+        Also default value must not be disabled (selectable) if not mandatory *@ 
+    @foreach(OptionViewModel option in Model.ChoiceOptions)
+    {
+        <!option value="@option.Value"
+                @(option.Selected ? "selected":string.Empty)
+                @(option.Disabled ? "disabled":string.Empty)
+                >@if (option.Description.Invalid())
+                 {
+                    @_localizer[nameof(LocalizedStr.InputControlParametersOptionDefaultDescription)]
+                 }
+                 else 
+                 {
+                    @option.Description
+                 }</!option>
+     }
+</!select>
+@if(!Model.UseFixedLabel)
+{
+    <label for="@Model.FieldName" class="placeholder-field @tmpHiddenLabel" 
+           @tmpAttributeIsOption @tmpAttributeHasRelatedField 
+           @tmpAttributeChoiceType @tmpAttributeDependentField>
+        @Model.Description@tmpMandatorySymbol
+    </label>
+}
+<span id="@Model.FieldName-error" 
+      class="helper-text helper-options" data-error=""></span>

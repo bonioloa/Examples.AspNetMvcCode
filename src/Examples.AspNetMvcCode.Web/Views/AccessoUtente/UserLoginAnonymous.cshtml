@@ -1,0 +1,164 @@
+﻿@model UserLoginViewModel
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+
+@{
+    Layout = MvcComponents.TemplateSplitPageFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.UserLoginPageTitle)]);
+    ViewData.SetLeftPanel(InfoAndLogo.LeftPanelTenant);
+    ViewData.SetRightPanel(InfoAndLogo.RightPanelLogoTenant);
+    ViewData.SetUseCaptcha(true);
+}
+@section styles
+{
+}
+@section scripts
+{
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = PathsStaticFilesRoot.AppPathScriptsPages
+                             , FileName= "login-user"
+                         })/>
+}
+
+        
+@*tab selector heavily customized because materialize hates this page*@
+<ul class="tabs tabs-fixed-width">
+    @{
+        string optionalAnonymousActive =
+            Model.FormToShow == LoginType.Anonymous
+            ? WebAppConstants.HtmlClassActive 
+            : string.Empty;
+    }
+    <li class="tab @optionalAnonymousActive">          
+        <a class="@optionalAnonymousActive tooltipped"
+           data-position="top" 
+           data-tooltip="@_localizer[nameof(LocalizedStr.UserLoginTabTitleTooltipNewAnonymousReport)]"
+           href="#login-anon-new" 
+           id="openAnonymousLogin"
+            >@_localizer[nameof(LocalizedStr.UserLoginTabTitleNewAnonymousReport)]</a>
+    </li>
+
+    @{
+        string optionalLoginCodeActive =
+            Model.FormToShow == LoginType.LoginCode
+            ? WebAppConstants.HtmlClassActive 
+            : string.Empty;
+    }
+    <li class="tab @optionalLoginCodeActive">     
+        <a class="@optionalLoginCodeActive tooltipped" 
+           data-position="top" 
+           data-tooltip="@_localizer[nameof(LocalizedStr.UserLoginTabTitleTooltipCheckReport)]"
+           href="#login-existing-check" 
+           id="openLoginWithLoginCode"
+            >@_localizer[nameof(LocalizedStr.UserLoginTabTitleCheckReportWithCode)]</a> 
+    </li>
+            
+    @{
+        string optionalCredentialsActive =
+            Model.FormToShow == LoginType.Credentials
+            ? WebAppConstants.HtmlClassActive 
+            : string.Empty;
+    }
+    <li class="tab @optionalCredentialsActive">         
+        <a class="@optionalCredentialsActive tooltipped"
+           data-position="top" 
+           data-tooltip="@_localizer[nameof(LocalizedStr.UserLoginTabTitleTooltipSupervisors)]"
+           href="#login-with-credentials" 
+           id="openLoginWithCredentials"
+            >@_localizer[nameof(LocalizedStr.UserLoginTabTitleSupervisorsArea)]</a>
+    </li>
+</ul>
+
+
+@*new report*@
+<div id="login-anon-new">
+    <form asp-controller="@MvcComponents.CtrlAccessUserPost"
+          asp-action="@MvcComponents.ActLoginAnonymous"
+          asp-antiforgery="true"
+          method="post"
+          id="form-anon-new">
+
+        <div class="row row-line-before row-line-x10-after">
+                <div class="col xl12 l12 m12 s12 left-align">
+                    @_localizer[nameof(LocalizedStr.UserLoginNewAnonymousReportMessage)]
+                </div>
+        </div>
+
+
+        <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+                 model=@(
+                            new ButtonsBackSubmitViewModel()
+                            {
+                                Id = "submit-new-anonymous-btn",
+                                SubmitLabel = _localizer[nameof(LocalizedStr.UserLoginInsertAnonymous)],
+                                HideBackButtonComponent = false,
+                                BackButtonUrlType = BackUrlConfig.TenantLogin,
+                            })/>
+    </form>
+</div>
+
+
+@*check existing report*@
+<div id="login-existing-check">     
+    <form asp-controller="@MvcComponents.CtrlAccessUserPost"
+          asp-action="@MvcComponents.ActLoginWithLoginCode"
+          asp-antiforgery="true"
+          method="post"
+          id="form-captcha-protected"
+          autocomplete="off"
+          class="form-anon-existing">
+
+        <div class="row row-line-before row-no-line-after">
+            <div class="col xl12 l12 m12 s12 left-align">
+                @_localizer[nameof(LocalizedStr.UserLoginReportLoginCodeLabel)]
+            </div>
+        </div>
+            
+        <div class="row row-line-x2-after">
+            <div class="input-field col xl12 l12 m12 s12">
+
+                @await Component.InvokeAsync(
+                    typeof(FieldInputTextSimpleComp)
+                    , new FieldViewModel()
+                        {
+                            FieldType = FieldType.InputTextSimple,
+                            InputSimpleType = InputSimpleType.Text,
+                            FieldName = ParamsNames.LoginCode,
+                            IsMandatory = true,
+                            HideMandatorySymbol = true,
+                            HasPlaceholder = true,
+                            Placeholder = "XXXX-XXXXXX",
+                        }
+                )
+            </div>
+        </div>
+
+        
+        @await Component.InvokeAsync(typeof(CaptchaComp))
+
+
+        <div class="row row-line-x3-after">
+        </div>
+
+
+        <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+                 model=@(
+                            new ButtonsBackSubmitViewModel()
+                            {
+                                Id = "submit-check-item-btn",
+                                SubmitLabel = _localizer[nameof(LocalizedStr.UserLoginCheckAnonymous)],
+                                HideBackButtonComponent = false,
+                                BackButtonUrlType = BackUrlConfig.TenantLogin,
+                            })/>
+    </form>
+</div>
+
+<div id="login-with-credentials">
+    <partial name="@MvcComponents.PartialLoginWithCredentialsForm" 
+             model=@Model/>
+</div>

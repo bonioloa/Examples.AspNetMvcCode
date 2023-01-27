@@ -1,0 +1,38 @@
+﻿@model FieldViewModel
+
+@* this field is always used for step submission, so we need to use divs instead of labels  *@
+
+@{
+    string recapFieldName = $"recap_{Model.FieldName}";
+    string tmpAttributeDivForField =  $"{WebAppConstants.HtmlAttrDivForField}={recapFieldName}";
+
+    string displayValue = Model.DisplayValue;
+    switch(Model.FieldType)
+    {
+        case FieldType.InputDate:
+            displayValue = Model.Value;
+            break;
+
+        //already attached files names must be omitted from here
+        //, only display the attachment just included and to be saved
+        //also we ignore optionsRadio with one option with attachment, 
+        //because it's always used in forms that will always saved with jump to next
+        case FieldType.InputMultipleFile:
+        case FieldType.InputOptionalMultipleFileUpload:
+        case FieldType.InputSingleFileOnly:
+            displayValue = string.Empty;
+            break;
+    }
+}
+<div class="div-as-label-input site-color-input-label" 
+     @tmpAttributeDivForField
+     ><span>@Model.Description</span>
+</div>
+<textarea 
+    readonly disabled
+    class="get materialize-textarea recap-field "
+    id="@recapFieldName" 
+    name="@recapFieldName" 
+    data-recap="@Model.FieldName"
+    >@displayValue</textarea> 
+    @*WARNING!!! don't leave spaces or new lines inside textarea tag, they will get displayed*@

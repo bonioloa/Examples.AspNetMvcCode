@@ -1,0 +1,52 @@
+﻿@{
+    Layout = MvcComponents.LayoutMainFile;
+
+    string currentBodyClasses = ViewData.GetBodyClasses();
+    string basicSecureAreaBodyClass = "basic-secure-area";
+    if(!currentBodyClasses.ContainsInvariant(basicSecureAreaBodyClass))
+    {
+        ViewData.SetBodyClasses(currentBodyClasses + CodeConstants.Space + basicSecureAreaBodyClass);
+    }
+
+    //(optional)
+    string containerClasses = ViewData.GetContainerClasses();
+    bool wrapOfficialBackgroud = ViewData.GetWrapOfficialBackground();
+
+}
+@section styles
+{
+    @RenderSection(MvcComponents.SectionStyles) 
+}
+@section scripts
+{
+   @RenderSection(MvcComponents.SectionScripts)
+}
+@section scriptsLast
+{
+}
+@section headerSecureArea
+{
+    @await Component.InvokeAsync(typeof(HeaderSecureAreaComp))
+}
+
+@{
+    void Template()
+    {
+        <section class="main-area">
+            <div class="container @containerClasses">
+                @RenderBody()
+            </div>
+        </section>
+    }
+}
+
+@if(wrapOfficialBackgroud)
+{
+    <div class="official-background">
+        @{ Template(); }
+    </div>
+}
+else
+{
+    Template();
+}

@@ -1,0 +1,16 @@
+﻿@model ButtonsBackSubmitViewModel
+
+<div class="row row-line-x2-before row-line-after"> 
+    <div class="col s12 m12 l12 xl12 left-align">
+        @if ( !Model.HideBackButtonComponent)
+        {
+            @await Component.InvokeAsync(
+                typeof(BackUrlComp)
+                , new BackUrlConfigViewModel(Model.BackButtonUrlType)
+            )
+        }
+
+        <partial name="@MvcComponents.SharedPartialButtonSubmit" 
+                 model=@Model/>
+    </div>
+</div>

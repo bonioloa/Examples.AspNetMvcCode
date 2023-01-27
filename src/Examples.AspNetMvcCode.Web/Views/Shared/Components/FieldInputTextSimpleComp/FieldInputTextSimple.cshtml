@@ -1,0 +1,53 @@
+﻿@model FieldViewModel
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+
+@{ 
+    string tmpMandatorySymbol =
+        Model.IsMandatory && !Model.HideMandatorySymbol && Model.Description.HasValue()
+        ? WebAppConstants.HtmlMandatorySymbol
+        : string.Empty;
+    IHtmlContent tmpAttributePlaceholder = new HtmlString(
+        Model.HasPlaceholder
+        ? $"{WebAppConstants.HtmlAttrPlaceholder}=\"{Model.Placeholder}\""
+        : string.Empty);
+    long tmpCharactersLimit = WebAppUtility.FieldLengthSafe(Model.CharactersLimit);
+    string tempAttrType = $"{WebAppConstants.HtmlAttrType}={Model.InputSimpleType.ToString().ToLowerInvariant()}";
+    IHtmlContent tempAttrValue = new HtmlString(
+        Model.Value.StringHasValue()
+        ? $"{WebAppConstants.HtmlAttrValue}=\"{Model.Value}\""
+        : string.Empty);
+    string tmpAttributeDivForField =  $"{WebAppConstants.HtmlAttrDivForField}={Model.FieldName}";
+    string tmpHiddenLabel = string.Empty;
+    if(Model.AdditionalClasses.StringHasValue() 
+        && Model.AdditionalClasses.ContainsInvariant(WebAppConstants.HtmlClassHidden))
+    {
+        tmpHiddenLabel = WebAppConstants.HtmlClassHidden;
+    }
+}
+
+@if(Model.UseFixedLabel)
+{
+    <div class="placeholder-field div-as-label-text-editable site-color-input-label @tmpHiddenLabel"
+         @tmpAttributeDivForField >
+        <span>@Model.Description@tmpMandatorySymbol</span>        
+    </div>
+}
+<input @tempAttrType
+       id="@Model.FieldName"
+       name="@Model.FieldName" 
+       class="get validate @Model.AdditionalClasses" 
+       @(Model.IsMandatory ? WebAppConstants.HtmlAttrRequired : string.Empty)
+       @(Model.IsReadOnly ? WebAppConstants.HtmlAttrReadOnly : string.Empty)
+       @(Model.IsDisabled ? WebAppConstants.HtmlAttrDisabled : string.Empty)
+       maxlength=@tmpCharactersLimit
+       @tmpAttributePlaceholder
+       @tempAttrValue >
+@if(!Model.UseFixedLabel)
+{
+    <label for="@Model.FieldName"
+           class="@tmpHiddenLabel">@Model.Description@tmpMandatorySymbol</label>
+}
+<span id="@(Model.FieldName)-error" 
+      class="helper-text" data-error=""></span>

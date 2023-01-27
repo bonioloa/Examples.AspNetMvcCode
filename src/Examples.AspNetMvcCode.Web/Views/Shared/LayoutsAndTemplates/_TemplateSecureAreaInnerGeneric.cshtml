@@ -1,0 +1,28 @@
+﻿@{
+    Layout = MvcComponents.TemplateSecureAreaOuterFile;
+
+    string currentBodyClasses = ViewData.GetBodyClasses();
+    string secureAreaBodyClass = "secure-area-background";
+    if(!currentBodyClasses.ContainsInvariant(secureAreaBodyClass))
+    {
+        ViewData.SetBodyClasses(currentBodyClasses + CodeConstants.Space + secureAreaBodyClass);
+    }
+}
+@section styles
+{
+    @RenderSection(MvcComponents.SectionStyles) 
+}
+@section scripts
+{
+    @RenderSection(MvcComponents.SectionScripts)
+}
+
+
+
+
+@*START template*@ 
+<div class="containing-panel panel-main">
+    <div class="inner-row">
+        @RenderBody()
+    </div>
+</div>

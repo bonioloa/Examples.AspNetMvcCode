@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ardalis.GuardClauses" Version="4.0.1" />
+    <PackageReference Include="IDisposableAnalyzers" Version="4.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Analyzers" Version="7.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="7.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Examples.AspNetMvcCode.Common\Examples.AspNetMvcCode.Common.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Resources\HtmlLocalization\HtmlLocalization.Designer.cs">
+			<DependentUpon>HtmlLocalization.resx</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+		<Compile Update="Resources\HtmlTemplateLocalized\HtmlTemplateLocalized.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>HtmlTemplateLocalized.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Resources\LocalizedStr\LocalizedStr.Designer.cs">
+			<DependentUpon>LocalizedStr.resx</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+		<Compile Update="Resources\TemplateLocalized\TemplateLocalized.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>TemplateLocalized.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Resources\HtmlLocalization\HtmlLocalization.en.resx">
+			<SubType>Designer</SubType>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\HtmlLocalization\HtmlLocalization.es.resx">
+			<SubType>Designer</SubType>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\HtmlLocalization\HtmlLocalization.resx">
+			<LastGenOutput>HtmlLocalization.Designer.cs</LastGenOutput>
+			<Generator>PublicResXFileCodeGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\HtmlTemplateLocalized\HtmlTemplateLocalized.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+			<LastGenOutput>HtmlTemplateLocalized.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\LocalizedStr\LocalizedStr.en.resx">
+			<SubType>Designer</SubType>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\LocalizedStr\LocalizedStr.es.resx">
+			<SubType>Designer</SubType>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\LocalizedStr\LocalizedStr.resx">
+			<SubType>Designer</SubType>
+			<LastGenOutput>LocalizedStr.Designer.cs</LastGenOutput>
+			<Generator>PublicResXFileCodeGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\TemplateLocalized\TemplateLocalized.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+			<LastGenOutput>TemplateLocalized.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+</Project>

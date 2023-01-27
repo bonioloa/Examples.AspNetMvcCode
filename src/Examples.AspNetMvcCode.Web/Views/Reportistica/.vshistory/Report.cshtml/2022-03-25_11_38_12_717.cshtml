@@ -1,0 +1,229 @@
+﻿@model ReportExportViewModel
+
+@inject MainLocalizer _localizer
+@inject HtmlMainLocalizer _htmlLocalizer
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.ReportPageTitle)]);
+
+    IDictionary<string, string> routeVars = new Dictionary<string, string>();
+}
+@section styles
+{   
+}
+@section scripts
+{
+<script>
+    var SharedConstReportPage = Immutable.Map({
+            'InputProcessAll': '@ParamsNames.ProcessAll',
+            'InputProcesses': '@ParamsNames.ProcessIdList',
+            }
+        );
+    </script>
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = WebAppConstants.AppPathScriptsPages
+                             , FileName= "report"
+                         })/>
+}
+
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@_localizer[nameof(LocalizedStr.ReportPageTitle)].ToString()"/>
+
+
+<form asp-controller="@MvcComponents.CtrlReporting"
+      asp-action="@MvcComponents.ActReportingDataExport"
+      method="get"
+      autocomplete="off"> @*get does not need anti forgery*@
+
+    <div id="processes-filter-master" 
+         class="row row-line-x2-after">
+        <div class="input-field col s12 m12 l12 xl12">           
+            @{
+                InputControlViewModel checkAllProcesses = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.OptionsCheckBox,
+                    FieldName = ParamsNames.ProcessAll,
+                    Description =  _htmlLocalizer[nameof(HtmlLocalization.ReportCheckAllProcessesLabel)],
+                    ChoiceOptions = new List<OptionViewModel>() {
+                        new OptionViewModel() 
+                        { 
+                            Selected = Model.AllProcesses,
+                            Value = AppConstants.FilterDefaultValueAllAvailableProcesses.ToString(),
+                            Description = new HtmlString(_localizer[nameof(LocalizedStr.ReportAllProcesses)])
+                        } 
+                    },
+                };
+            }
+            <vc:input-check input-model="checkAllProcesses">
+            </vc:input-check>
+        </div>
+    </div>
+
+
+    <div id="processes-filter-slave" 
+         class="row row-line-after">
+        <div class="input-field col s12 m12 l12 xl12">       
+            @{
+                InputControlViewModel selectProcess = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.OptionsSelect,
+                    FieldName = ParamsNames.ProcessIdList,
+                    ChoiceOptions = Model.ProcessSelect,
+                    Description = _htmlLocalizer[nameof(HtmlLocalization.ReportProcessesSubset)],
+                    IsMultiple = true,
+                    IsMandatory = true,
+                };
+            }
+            <vc:input-select input-model="selectProcess">
+            </vc:input-select>
+        </div>
+    </div>
+
+    @if(Model.ProcessLinkedSelect.HasValues())
+    {
+        <div id="processes-linked-filter-master" 
+             class="row row-line-x2-after">
+            <div class="input-field col s12 m12 l12 xl12">           
+                @{
+                    InputControlViewModel checkAllLinkedProcesses = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.OptionsCheckBox,
+                        FieldName = ParamsNames.ProcessLinkedAll,
+                        Description =  _htmlLocalizer[nameof(HtmlLocalization.ReportCheckAllProcessesLinkedLabel)],
+                        ChoiceOptions = new List<OptionViewModel>() {
+                            new OptionViewModel() 
+                            { 
+                                Selected = Model.AllLinkedProcesses,
+                                Value = AppConstants.FilterDefaultValueAllAvailableLinkedProcesses.ToString(),
+                                Description = new HtmlString(_localizer[nameof(LocalizedStr.ReportAllProcessesLinked)])
+                            } 
+                        },
+                    
+                    };
+                }
+                <vc:input-check input-model="checkAllLinkedProcesses">
+                </vc:input-check>
+            </div>
+        </div>
+
+
+        <div id="processes-linked-filter-slave" 
+             class="row row-line-after">
+            <div class="input-field col s12 m12 l12 xl12">       
+                @{
+                    InputControlViewModel selectLinkedProcess = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.OptionsSelect,
+                        FieldName = ParamsNames.ProcessLinkedIdList,
+                        ChoiceOptions = Model.ProcessLinkedSelect,
+                        Description = _htmlLocalizer[nameof(HtmlLocalization.ReportProcessesLinkedSubset)],
+                        IsMultiple = true,
+                        IsMandatory = true,
+                    };
+                }
+                <vc:input-select input-model="selectLinkedProcess">
+                </vc:input-select>
+            </div>
+        </div>
+    } @*end process linked optional filters*@
+
+
+    <div class="row row-line-after">
+        <div class="input-field col s12 m6 l6 xl6">
+            @{
+                InputControlViewModel inputDateSubmitFrom = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.InputDate,
+                    FieldName = ParamsNames.DateSubmitFrom,
+                    Value = Model.DateSubmitFrom.ToStringDateSortableInvariant(),
+                   
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitFrom)]),
+                };
+            }
+            <vc:input-date input-model="inputDateSubmitFrom">
+            </vc:input-date>
+        </div>
+
+        <div class="input-field col s12 m6 l6 xl6">
+            @{
+                InputControlViewModel inputDateSubmitTo = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.InputDate,
+                    FieldName = ParamsNames.DateSubmitTo,
+                    Value = Model.DateSubmitTo.ToStringDateSortableInvariant(),
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitTo)]),
+                };
+            }
+            <vc:input-date input-model="inputDateSubmitTo">
+            </vc:input-date>
+        </div>
+    </div>
+
+
+
+    @if(Model.EnableDateExpirationFilter)
+    {
+        <div class="row row-line-after">
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel inputDateExpirationFrom = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputDate,
+                        FieldName = ParamsNames.DateExpirationFrom,
+                        Value = Model.DateExpirationFrom.ToStringDateSortableInvariant(),
+                   
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationFrom)]),
+                    };
+                }
+                <vc:input-date input-model="inputDateExpirationFrom">
+                </vc:input-date>
+            </div>
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel inputDateExpirationTo = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputDate,
+                        FieldName = ParamsNames.DateExpirationTo,
+                        Value = Model.DateExpirationTo.ToStringDateSortableInvariant(),
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationTo)]),
+                    };
+                }
+                <vc:input-date input-model="inputDateExpirationTo">
+                </vc:input-date>
+            </div>
+        </div>
+    }
+    
+
+     @{ 
+         ButtonsBackSubmitViewModel dataDumpBtnModel = new ButtonsBackSubmitViewModel()
+         {
+             Id = "btn-get-data-to-excel",
+             SubmitLabel = _localizer[nameof(LocalizedStr.ReportButtonGetExcel)],
+             HideBackButtonComponent = true,
+             BackButtonUrlType = BackUrlConfig.Missing, //back button is hidden
+             CssClasses = new List<string>() { "no-preloader" },
+         };
+    }
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@dataDumpBtnModel/>
+
+    @* we can't use redirect to show this message *@
+    @if(Model.ShowMessageNoResultsFound)
+    {
+        <div id="report-no-results-warning"
+             class="row row-line-x2-before row-line-x2-after">
+            <div class="col s12 m12 l12 xl12 site-color-warn">        
+                @_localizer[nameof(LocalizedStr.SharedReportMessageNoResults)]
+            </div>
+        </div>
+    }
+</form>

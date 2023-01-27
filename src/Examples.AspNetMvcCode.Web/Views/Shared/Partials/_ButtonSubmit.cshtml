@@ -1,0 +1,31 @@
+﻿@model ButtonsBackSubmitViewModel
+
+@{
+    string additionalClasses = string.Empty;
+
+    if(Model.CssClasses.HasValues())
+    {
+        //default submit button floating is right
+        if( !Model.CssClasses.Any(cl => cl.EqualsInvariant("left")))
+        {
+            Model.CssClasses.Add("right");
+        }
+    }
+    else
+    {
+        Model.CssClasses = new List<string>() { "right" };
+    }
+
+    additionalClasses = string.Join(CodeConstants.Space, Model.CssClasses);
+
+}
+
+@*name and value are necessary to detect what button was clicked 
+    in case of multiple submit action for wrapping form*@ 
+<button id="@Model.Id"
+        type="submit"
+        name="@ParamsNames.SubmitType"
+        class="@WebAppConstants.HtmlClassButton @WebAppConstants.HtmlClassButtonPrimary @additionalClasses"
+        @(Model.SubmitDisabled ? WebAppConstants.HtmlAttrDisabled: string.Empty)
+        value="@Model.SubmitValue"
+        >@Model.SubmitLabel</button>

@@ -1,0 +1,26 @@
+﻿@model IHtmlContent
+
+@inject IMainLocalizer _localizer
+
+@{ 
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.SearchPageTitle)]);
+}
+
+@section styles
+{
+}
+@section scripts
+{
+}
+
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@_localizer[nameof(LocalizedStr.SearchPageTitle)].ToString()"/>
+
+<div class="row row-line-after">
+    <div class="col xl12 l12 s12 m12">
+        @Model
+    </div>
+</div>

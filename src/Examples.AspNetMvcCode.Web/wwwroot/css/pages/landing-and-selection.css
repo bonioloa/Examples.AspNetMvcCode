@@ -1,0 +1,91 @@
+﻿/*this page cannot be THEMED without removing background image*/
+
+
+body.main-welcome-background {
+    background-image: radial-gradient(#e6ecf2 60%, #c7d0d7);
+}
+.official-background {
+    min-height: 90vh;
+    overflow: auto;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.containing-panel.panel-welcome {
+    border: 2px solid rgba(241, 251, 255,0.6);
+    border-radius: 10px;
+}
+@media (min-width: 960px) and (max-width: 1366px) and (min-height: 640px) and (max-height: 1024px) {
+    .official-background {
+        background-image: url('../../css-images/test-home-img-3_856x1850.png');
+        min-width: unset !important;
+    }
+    .container.welcome-container {
+        margin-left: 7%;
+    }
+    .containing-panel.panel-welcome {
+        border: none !important;
+        max-width:50rem;
+    }
+
+    .containing-panel .inner-row {
+        padding-top: 1rem;
+    }
+}
+@media (min-width:1186px) and (max-width: 1680px) and (min-height: 768px) and (max-height: 1080px) {
+    .official-background {
+        background-image: url('../../css-images/test-home-img-3_900x1815.png');
+        min-width: unset !important;
+    }
+
+    .container.welcome-container {
+        margin-left: 7%;
+    }
+
+    .containing-panel.panel-welcome {
+        border: none !important;
+        max-width: 55rem;
+    }
+
+    .containing-panel .inner-row {
+        padding-top: 3.8rem;
+    }
+}
+@media (min-width:1441px) and (max-width: 1680px) and (min-height: 880px) and (max-height: 1024px) {
+    .official-background {
+        background-image: url('../../css-images/test-home-img-3_900x2006.png');
+        min-width: unset !important;
+    }
+
+    .container.welcome-container {
+        margin-left: 15%;
+    }
+
+    .containing-panel.panel-welcome {
+        border: none !important;
+        max-width: 58rem;
+    }
+
+    .containing-panel .inner-row {
+        padding-top: 4.3rem;
+    }
+}
+@media  (min-width:1681px) and (max-height: 1080px) {
+    .official-background {
+        background-image: url('../../css-images/test-home-img-3_900x2006.png');
+        min-width: unset !important;
+    }
+    .container.welcome-container {
+        margin-left: 14%;
+        max-width: 60rem;
+    }
+    .containing-panel.panel-welcome {
+        border: none !important;
+    }
+
+    .containing-panel .inner-row {
+        padding-top: 5rem;
+    }
+}
+
+/*class to identify process selection modal inputs*/
+.process-selection-input{}

@@ -1,0 +1,32 @@
+﻿@*this partial is a centralized way to set the appropriate file version for each environment
+the minified versions must be used only in Production environment for performance reason
+In other environments use normal files for debugging and clarity reason*@
+
+@model IncludeLocalFilesViewModel
+
+@inject IHostEnvironment _environment
+@inject IOptionsSnapshot<WebsiteSettings> _optWebsite
+
+@{
+    string optionalMinifySuffix =
+        _optWebsite.Value.EnvironmentsIntendedForMinifiedFiles
+            .Any(e => e.EqualsInvariant(_environment.EnvironmentName))
+        ? ".min"
+        : string.Empty ;
+
+    string partialContentPath = Model.BasePath + Model.FileName + optionalMinifySuffix;
+}
+
+@switch(Model.Type)
+{
+    case IncludeType.Css:
+
+        <link href="@Url.Content(partialContentPath + ".css")" 
+              rel="stylesheet" type="text/css"/>
+        break;
+
+    case IncludeType.Javascript:
+
+        <script src="@Url.Content(partialContentPath + ".js")"></script> 
+        break;
+}

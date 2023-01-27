@@ -1,0 +1,32 @@
+﻿@model IEnumerable<CultureViewModel>
+
+@inject IHttpContextAccessorWeb _webHttpContextAccessor
+
+@{
+    CultureViewModel selected = 
+        Model.Where(c => c.Selected == true)
+             .FirstOrDefault();
+    IDictionary<string, string> routeVars = null;
+}
+<div class="dropdown2">
+    <button class="dropbtn2">
+        @selected.DisplayText
+        <span class="flag-icon flag-icon-squared flag-icon-@selected.IconCode right "></span>
+    </button>
+
+    <div class="dropdown2-content left-align">
+        @*build url to the current page for each language*@
+        @foreach (CultureViewModel cultureModel in Model)
+        {
+            routeVars = _webHttpContextAccessor.GetContextRequestQuerystringWithLanguage(cultureModel.CultureIsoCode);
+
+            <a asp-controller="@_webHttpContextAccessor.ContextController"
+               asp-action="@_webHttpContextAccessor.ContextAction"
+               asp-all-route-data="routeVars"
+               class="show-preloader">
+                @cultureModel.DisplayText
+                <span class="flag-icon flag-icon-squared flag-icon-@cultureModel.IconCode right"></span>
+            </a>
+        }
+    </div>
+</div>

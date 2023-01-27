@@ -1,0 +1,33 @@
+﻿@*@model *@
+
+@inject IMainLocalizer _localizer
+
+@*//https://github.com/VahidN/DNTCaptcha.Core*@
+
+@*IMPORTANT
+	asp-captcha-generator-language does not matter because we generate a check with sum of two digits,
+	making the captcha generation language independent.
+*@
+
+@*this component has reload button and requires bootstrap for a complete visualization
+we don't need that so we will not include bootstrap to not pollute our styling. Reload button icon will be invisible*@
+
+
+<dnt-captcha asp-captcha-generator-max="30"
+			 asp-captcha-generator-min="1"
+			 asp-captcha-generator-language="@Language.English"
+			 asp-captcha-generator-display-mode="@DisplayMode.SumOfTwoNumbers"
+			 asp-use-relative-urls="true"
+			 asp-placeholder="@_localizer[nameof(LocalizedStr.CaptchaPlaceholder)].ToString()"
+			 asp-validation-error-message="@_localizer[nameof(LocalizedStr.CaptchaErrorMessage)].ToString()"
+			 asp-font-name="Tahoma"
+			 asp-font-size="30"
+			 asp-fore-color="#333333"
+			 asp-back-color="#FCF6F5FF"
+			 asp-text-box-class="form-control"
+			 asp-text-box-template="<div class='input-group'><span class='input-group-text'><span class='bi-lock'></span></span>{0}</div>"
+			 asp-validation-message-class="text-danger"
+			 asp-refresh-button-class="bi-arrow-counterclockwise btn-lg"
+			 asp-show-refresh-button="true"
+			 asp-dir="ltr" 
+			 />

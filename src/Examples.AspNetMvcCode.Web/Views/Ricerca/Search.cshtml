@@ -1,0 +1,279 @@
+﻿@model ItemSearchResultViewModel
+
+@inject ContextApp _contextApp
+@inject IMainLocalizer _localizer
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.SearchPageTitle)]);
+    ViewData.SetUseDatatableNetJsLibrary(true);
+
+
+    //column configuration
+    int columnsCount = 0;
+    IHtmlContent columnsSimpleTarget = new HtmlString("[]");
+
+    int processDescriptionColumnIndex = 0;
+    int newMessageColumnIndex = 0;
+    int expirationColumnIndex = 0;
+    int submitDateTimeColumnIndex = 0;
+
+
+    if (Model.ShowResults && Model.SearchResultsModel.AvailableColumnsIndexes.HasValues())
+    {
+        //orderingSerialized = Model.SearchResultsModel.ColumnDefaultOrderingModelSerialized;
+        columnsCount = Model.SearchResultsModel.AvailableColumnsIndexes.Count();
+        columnsSimpleTarget = Model.SearchResultsModel.ColumnDefSimpleTargetsSerialized;
+
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppUtility.ToSerializationCase(SearchResultItemField.ProcessDescription), out processDescriptionColumnIndex);
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppUtility.ToSerializationCase(SearchResultItemField.UnreadChatMessage), out newMessageColumnIndex);
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppUtility.ToSerializationCase(SearchResultItemField.ExpirationWarning), out expirationColumnIndex);
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppUtility.ToSerializationCase(SearchResultItemField.DateTimeSubmit), out submitDateTimeColumnIndex);
+    }
+}
+@section styles
+{
+}
+@section scripts
+{
+    <script> 
+        var SharedConstItemSearchPage = Immutable.Map({
+            "SearchResultsColumns": @columnsCount,
+            "ColumnsSimpleTarget": @columnsSimpleTarget,
+
+            "ColumnItemLinkName": "@WebAppUtility.ToSerializationCase(SearchResultItemField.LinkToModify)",
+            "ColumnRequiresAttentionName": "@WebAppUtility.ToSerializationCase(SearchResultItemField.RequiresAttention)",
+
+            "ColumnProcessDescriptionIndex": @processDescriptionColumnIndex,
+            "ColumnNewMessageIndex": @newMessageColumnIndex,
+            "ColumnExpirationIndex": @expirationColumnIndex,
+            "ColumnSubmitDateTimeIndex": @submitDateTimeColumnIndex,
+        });
+
+        var columnDefsConfig = Object.freeze(
+            [
+                @if(!_optProduct.Value.DisableUsersChatComponent)
+                {
+                    @:{
+                    @:    targets: SharedConstItemSearchPage.get("ColumnNewMessageIndex"),
+                    @:    width: "5%",
+                    @:    render: function (data, type, row, meta) {
+                    @:        if (typeof data !== "undefined" && data === "true") {
+                    @:            return '<i class="@WebAppConstants.HtmlStandardIconClasses tiny icon-warn">@WebAppConstants.HtmlCodeMailOutline</i>';
+                    @:        }
+                    @:        else
+                    @:            return '';
+                    @:        }
+                    @:},
+                }
+                
+                {
+                    targets: SharedConstItemSearchPage.get("ColumnExpirationIndex"),
+                    width: "5%",
+                    render: function (data, type, row, meta) {
+                        if (typeof data !== "undefined" && data === "true") {
+                            return '<i class="@WebAppConstants.HtmlStandardIconClasses tiny icon-warn ">@WebAppConstants.HtmlCodeWarning</i>';
+                        }
+                        else
+                            return '';
+                    }
+                },                
+                {
+                    targets: SharedConstItemSearchPage.get("ColumnsSimpleTarget"),
+                    autowidth: true,
+                }
+            ]
+        );       
+        @if(Model.ShowResults && Model.SearchResultsModel != null)
+        {
+            @:var SharedVarItemSearchHasResults = true;
+            @:var SharedConstItemSearchDtColumnsConfig = Object.freeze(@Model.SearchResultsModel.ColumnsJsonObjectSerialized);
+            @:var SharedConstItemSearchDtRowsData = Object.freeze(@Model.SearchResultsModel.RowsJsonObjectSerialized);            
+        }
+        else
+        {
+            @:var SharedVarItemSearchHasResults = false;
+        }
+    </script>
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = PathsStaticFilesRoot.AppPathScriptsPages
+                             , FileName= "search"
+                         })/>
+}
+
+
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@_localizer[nameof(LocalizedStr.SearchPageTitle)].ToString()"/>
+
+
+@*WARNING this is a GET call to same action, Antiforgery not needed*@
+<form method="get" autocomplete="off">
+
+    <div class="row row-line-after">
+        <div class="input-field col s12 m6 l6 xl6">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputSelectComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.OptionsSelect,
+                        FieldName = ParamsNames.ProcessId,
+                        Options = Model.ProcessSelect,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelProcess)]),
+                    }
+            )
+        </div>
+
+
+        <div class="input-field col s12 m6 l6 xl6">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputSelectComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.OptionsSelect,
+                        FieldName = ParamsNames.StepStateGroup,
+                        Options = Model.StepStateGroupSelect,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelStepStateGroup)]),
+                    }
+            )
+        </div>
+    </div>
+
+    <div class="row row-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+
+            <select name="@ParamsNames.ProcessStep" id="@ParamsNames.ProcessStep"
+                    class="get validate" required>
+
+                @foreach(ProcessStepGroupFilterViewModel filterGroup in Model.StepSelect)
+                {
+                    <optgroup label="@filterGroup.ProcessDescription" 
+                                process-id="@filterGroup.ProcessId">
+                    @foreach(ProcessStepFilterViewModel option in filterGroup.Steps)
+                    {
+                        if(option.Selected)
+                        {
+                            <option selected 
+                                    value="@option.Code"
+                                    is-open="@(option.StepStateGroup == StepStateGroupType.Open)"
+                                    is-closed ="@(option.StepStateGroup == StepStateGroupType.Closed)"
+                                    >@option.Description</option>
+                        }
+                        else
+                        {
+                            <option value="@option.Code"
+                                    is-open="@(option.StepStateGroup == StepStateGroupType.Open)"
+                                    is-closed ="@(option.StepStateGroup == StepStateGroupType.Closed)"
+                                    >@option.Description</option>
+                        }
+                    }
+                    </optgroup>
+                }
+            </select>
+            <label for="@ParamsNames.ProcessStep"
+                   >@_localizer[nameof(LocalizedStr.SharedFieldSearchFilterStep)]@CodeConstants.Colon</label>
+        </div>
+    </div>
+
+    <div class="row row-line-after">
+        <div class="input-field col s12 m6 l6 xl6">
+            @await Component.InvokeAsync(
+                typeof(FieldInputDateComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputDate,
+                        FieldName = ParamsNames.DateSubmitFrom,
+                        Value = Model.DateSubmitFrom.ToStringDateSortableInvariant(),
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitFrom)]),
+                    }
+            )
+        </div>
+
+        <div class="input-field col s12 m6 l6 xl6">
+            @await Component.InvokeAsync(
+                typeof(FieldInputDateComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputDate,
+                        FieldName = ParamsNames.DateSubmitTo,
+                        Value =  Model.DateSubmitTo.ToStringDateSortableInvariant(),
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitTo)]),
+                    }
+            )
+        </div>
+    </div>
+
+    @if(Model.EnableDateExpirationFilter)
+    {
+        <div class="row row-line-after">
+            <div class="input-field col s12 m6 l6 xl6">
+                @await Component.InvokeAsync(
+                    typeof(FieldInputDateComp)
+                    , new FieldViewModel()
+                        {
+                            FieldType = FieldType.InputDate,
+                            FieldName = ParamsNames.DateExpirationFrom,
+                            Value = Model.DateExpirationFrom.ToStringDateSortableInvariant(),
+                            Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationFrom)]),
+                        }
+                )
+            </div>
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @await Component.InvokeAsync(
+                    typeof(FieldInputDateComp)
+                    , new FieldViewModel()
+                        {
+                            FieldType = FieldType.InputDate,
+                            FieldName = ParamsNames.DateExpirationTo,
+                            Value = Model.DateExpirationTo.ToStringDateSortableInvariant(),
+                            Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationTo)]),
+                        }
+                )
+            </div>
+        </div>
+    }
+
+
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@(
+                        new ButtonsBackSubmitViewModel()
+                        {
+                            Id = "submit-search-item",
+                            SubmitLabel = _localizer[nameof(LocalizedStr.SearchSubmitButton)],
+                            HideBackButtonComponent = true,
+                            BackButtonUrlType = BackUrlConfig.Missing, //back button is hidden
+                        })/>
+</form>
+
+
+@if (Model.ShowResults)
+{
+    <div class="row row-line-x2-before">
+        <div class="col xl12 l12 s12 m12">
+            <h2 class="generic-secondary-title">
+                @_localizer[nameof(LocalizedStr.SharedSearchResultsTableTitle)]
+            </h2>
+        </div>
+    </div>
+           
+    <div class="row row-line-after">
+        <div class="col xl12 l12 m12 s12 force-zero-padding">
+            <table id="search-results-table" 
+                    class="display"
+                    cellpadding="0">
+            </table>
+        </div>
+    </div>
+} 

@@ -1,0 +1,140 @@
+﻿@model FieldViewModel
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+
+@{ 
+    string tmpAttributeIsOption = $"{WebAppConstants.HtmlAttrFieldHasOptions}={Model.FieldName}";
+    string tmpAttributeChoiceType = $"{WebAppConstants.HtmlAttrFieldChoiceType}={Model.FieldType.ToString()}";
+    string tmpAttributeHasRelatedField = string.Empty;
+    if (Model.RelatedFieldHtmlLabel.HasValue())
+    {
+        tmpAttributeHasRelatedField = WebAppConstants.HtmlAttrFieldHasRelated;
+    }
+    string tmpMandatorySymbol =
+        Model.IsMandatory && !Model.HideMandatorySymbol && Model.Description.HasValue()
+        ? WebAppConstants.HtmlMandatorySymbol
+        : string.Empty;
+
+    string tmpAttributeDivForField =  $"{WebAppConstants.HtmlAttrDivForField}={Model.FieldName}";
+    string tmpHiddenLabel = string.Empty;
+    if(Model.AdditionalClasses.StringHasValue() && 
+        Model.AdditionalClasses.ContainsInvariant(WebAppConstants.HtmlClassHidden))
+    {
+        tmpHiddenLabel = WebAppConstants.HtmlClassHidden;
+    }
+    string tmpAttributeDependentField = string.Empty;
+    if(Model.DependingField.StringHasValue())
+    {
+        tmpAttributeDependentField = $"{WebAppConstants.HtmlAttrHasDependent}={Model.DependingField}";
+    }
+}
+<div class="placeholder-field div-as-label-option site-color-input-label @tmpHiddenLabel" 
+     @tmpAttributeDivForField @tmpAttributeIsOption @tmpAttributeHasRelatedField 
+     @tmpAttributeChoiceType @tmpAttributeDependentField>
+    <span>@Model.Description@tmpMandatorySymbol</span>
+    <span id="@Model.FieldName-error" 
+            class="helper-text helper-options" data-error=""></span>
+</div>
+    
+@{
+    int tmpIndex = 0;
+    bool isFileOption = false;
+    string idRadioAttachment = string.Empty;
+    string tmpHtmlId = string.Empty;
+    string tmpAttrRequired = string.Empty;
+    string tmpAttrChecked = string.Empty;
+    string tmpAttrHasAttachement = string.Empty;
+
+    long choicesOnSameLine = Model.ChoicesOnSameLine <= 1 ? 1 : Model.ChoicesOnSameLine;
+    string gridClass = string.Empty;
+    switch(choicesOnSameLine)
+    {
+        case 1:
+            gridClass = "xl12 l12 m12 s12";
+            break;
+        case 2:
+            gridClass = "xl6 l6 m6 s12";
+            break;
+        case 3:
+            gridClass = "xl4 l4 m4 s12";
+            break;
+    }
+}
+@foreach (OptionViewModel option in Model.Options)
+{
+    isFileOption = option.Value.ContainsInvariant(AppConstants.OptionFileAttachmentPrefix);
+
+    //id is always fixed for file upload additional field
+    tmpHtmlId = isFileOption
+        ? AppConstants.OptionFileAttachmentPrefix  + "_" + Model.FieldName
+        : $"{tmpIndex}{Model.GroupId}{Model.FieldName}";
+    if(isFileOption)
+    {
+        idRadioAttachment = tmpHtmlId;
+    }
+    tmpAttrRequired = Model.IsMandatory ? WebAppConstants.HtmlAttrRequired : string.Empty;
+    tmpAttrChecked = option.Selected ? WebAppConstants.HtmlAttrChecked : string.Empty;
+    tmpAttrHasAttachement = isFileOption ? $"{WebAppConstants.HtmlAttrHasAttachment}" : string.Empty;
+
+    <div class="col @gridClass option-space">
+        <label>
+            <input type="radio" 
+                   id="@tmpHtmlId"
+                   name="@Model.FieldName"
+                   class="get validate with-gap @Model.AdditionalClasses" 
+                   @tmpAttrRequired
+                   value="@option.Value"
+                   @tmpAttrChecked
+                   @tmpAttrHasAttachement
+                   @(option.Disabled || Model.IsDisabled ? WebAppConstants.HtmlAttrDisabled : string.Empty)
+                   @(Model.IsReadOnly ? WebAppConstants.HtmlAttrReadOnly : string.Empty)
+                   />
+            @if(Model.ChoicesUseOnlyImagesAsDescription)
+            {
+                <span class="site-color-input-option"
+                      ><img src="@(Url.Content(PathsStaticFilesAdditional.AppPathTenantsLogo + option.ImagePath))"
+                            class="responsive-img"/>
+                </span> 
+            }
+            else
+            {
+                <span class="site-color-input-option"
+                      >@option.Description</span> 
+            }
+        </label>
+    </div>
+
+    @if (isFileOption)
+    {
+        //in this moment radio id for attachment is fixed, maybe in future change it
+
+        string tmpAttrRelatedTo = $"{WebAppConstants.HtmlAttrRelatedTo}={tmpHtmlId}";
+
+        <div class="wrap_checked_poss_doc" @tmpAttrRelatedTo>
+
+            @{
+                FileInputBasicViewModel fileInputBasicModel = 
+                    new()
+                    {
+                        IsMandatory = false,//attachment option is never mandatory
+                        Description = _htmlLocalizer[nameof(HtmlLocalization.SharedFileAttachmentHtmlLabel)],
+                        FieldName = Model.FieldName,
+                        IsReadOnly = Model.IsReadOnly,
+                        IsDisabled = Model.IsDisabled,
+                        AdditionalClasses = new List<string>() { "radio-file-option" },
+                        InputFileAdditionalAttributes =
+                            new Dictionary<string, string>()
+                            { 
+                                { WebAppConstants.HtmlAttrAttachmentRadioId, idRadioAttachment},
+                            },
+                        AcceptFileExtensions = null,
+                    };
+            }
+            <partial name="@MvcComponents.SharedPartialFileInputBasic" 
+                     model=@fileInputBasicModel/>
+        </div>
+    }
+
+    tmpIndex++;
+} @*end foreach*@

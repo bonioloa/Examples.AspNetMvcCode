@@ -1,0 +1,13 @@
+﻿@model BackUrlViewModel
+
+@* potrebbe avere senso rimuovere il token dall'indietro 
+    poiché l'automatismo per l'accesso diretto ci riporta sempre alla pagina utente 
+    dal punto di vista utente però questa cosa non è sbagliata, in quanto non dovrebbero mai vedere
+    la pagina di identificazione tenant*@
+
+<a asp-controller="@Model.Route.Controller"
+   asp-action="@Model.Route.Action"
+   asp-all-route-data="@Model.Route.QueryStringValues"
+   class="left show-preloader @WebAppConstants.HtmlClassButton @WebAppConstants.HtmlClassButtonDefault ">                                    
+        @Model.Label @*already translated in component call*@
+</a>

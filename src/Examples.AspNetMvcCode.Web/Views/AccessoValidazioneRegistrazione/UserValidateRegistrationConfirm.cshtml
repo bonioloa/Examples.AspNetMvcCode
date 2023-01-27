@@ -1,0 +1,49 @@
+﻿@model UserValidateRegistrationResultViewModel
+
+@inject IMainLocalizer _localizer
+@*@inject HtmlMainLocalizer _htmlLocalizer*@
+
+@{
+    Layout = MvcComponents.TemplatePanelPageFile;
+
+    ViewData.SetTitle(Model.Title);
+    ViewData.SetLogo(InfoAndLogo.CentralPanelLogoProduct);//this is a page directly accessible
+    ViewData.SetShowLanguageSelector(true);
+    ViewData.SetUseCaptcha(true);
+}
+@section styles
+{
+}
+@section scripts
+{
+}
+
+
+<div class="row row-line-after">
+    <div class="col xl12 l12 m12 s12 center-align">
+        <h5 class="simple-panel-title ">
+            @Model.Title
+        </h5>
+    </div>
+</div>
+
+<div class="row row-line-after">
+    <div class="col xl12 l12 m12 s12">
+        @Model.Message
+    </div>
+</div>
+
+<div class="row row-line-x2-before row-line-after">
+    <div class="col s12 m12 l12 xl12 left-align">
+        <a asp-controller="@MvcComponents.CtrlAccessMain"
+           asp-action="@MvcComponents.ActLoginTenant"
+           asp-all-route-data="@(
+                new Dictionary<string,string>()
+                {
+                    {ParamsNames.TenantToken, Model.Token}
+                })"
+           class="left show-preloader @WebAppConstants.HtmlClassButton @WebAppConstants.HtmlClassButtonDefault ">
+            @_localizer[nameof(LocalizedStr.SharedButtonGoToLogin)] 
+        </a>
+    </div>
+</div>

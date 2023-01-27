@@ -1,0 +1,230 @@
+﻿@model SupervisorSearchViewModel 
+
+@inject MainLocalizer _localizer
+@inject IHttpContextAccessorCustom _httpContextAccessorCustomWeb
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.UserManagementPageTitle)]);
+    ViewData.SetUseDatatableNetJsLibrary(true);
+
+    bool showResults =
+        Model.ShowResults
+        && Model.SearchResultsModel != null;
+
+    //column configuration,
+    int linkUserModifyIndex = 0;
+    int loginIndex = 0;
+    int surnameIndex = 0;
+    int nameIndex = 0;
+    int emailIndex = 0;
+    int hasSupervisorRoleIndex = 0;
+
+    if(showResults
+        && Model.SearchResultsModel.AvailableColumnsIndexes.HasValues())
+    {
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppDataTablesNetConstants.LinkSupervisorModify, out linkUserModifyIndex);
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppDataTablesNetConstants.Login, out loginIndex);
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppDataTablesNetConstants.Surname, out surnameIndex);
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppDataTablesNetConstants.Name, out nameIndex);
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppDataTablesNetConstants.Email, out emailIndex);
+        Model.SearchResultsModel.AvailableColumnsIndexes.TryGetValue(
+            WebAppDataTablesNetConstants.RoleType, out hasSupervisorRoleIndex);
+    }
+}
+@section styles
+{
+}
+@section scripts
+{
+    <script>
+        var SharedConstUserSearchPage = Immutable.Map({
+            "ColumnNameLinkSupervisorModify": "@WebAppDataTablesNetConstants.LinkSupervisorModify",
+            "ColumnNameRoleType": "@WebAppDataTablesNetConstants.RoleType",
+
+            "ColumnIndexLogin" : "@loginIndex",
+            "ColumnIndexSurname": @surnameIndex,
+            "ColumnIndexName": "@nameIndex",
+            "ColumnIndexEmail": "@emailIndex",
+
+            "UserProfileBasicRoleActive": "@UserProfile.BasicRoleActive",
+            "UserProfileBasicRoleDeactivated": "@UserProfile.BasicRoleDeactivated",
+            "UserProfileSupervisor": "@UserProfile.Supervisor",
+        });
+        @if(showResults)
+        {
+            @:var SharedVarSearchHasResults = true;
+            @:var SharedConstSearchDtColumnsConfig = Object.freeze(@Model.SearchResultsModel.ColumnsJsonObjectSerialized);
+            @:var SharedConstSearchDtRowsData = Object.freeze(@Model.SearchResultsModel.RowsJsonObjectSerialized);            
+        }
+        else
+        {
+            @:var SharedVarSearchHasResults = false;
+        }
+    </script>
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = WebAppConstants.AppPathScriptsPages
+                             , FileName= "supervisor-management"
+                         })/>
+}
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@_localizer[nameof(LocalizedStr.UserManagementPageTitle)].ToString()"/>
+
+
+
+@if(Model.OrphanedRolesDescriptions.HasValues())
+{
+    <div class="row row-line-x3-after">
+        <div class="col s12 m12 l12 xl12">
+            <ul class="collection with-header">
+                <li class="collection-header site-color-warn">
+                    @_localizer[nameof(LocalizedStr.UserSearchOrphanedRolesTitle)]@CodeConstants.Colon 
+                </li>
+                @foreach(IHtmlContent orphanedRole in Model.OrphanedRolesDescriptions)
+                {
+                    <li class="collection-item">@orphanedRole</li>
+                }
+              </ul>
+        </div>
+    </div>
+}
+
+@* classe da applicare a righe senza profilo responsabile site-color-disabled*@
+<form method="get" autocomplete="off">
+    @*WARNING this is a GET call to same action, Antiforgery not needed*@
+
+        @*required to make controller understand if search should be performed or not*@
+        <input type="hidden" 
+               id="@ParamsNames.PerformSearch"
+               name="@ParamsNames.PerformSearch" value="true">
+
+        <div class="row row-line-after">
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel filterSurName = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputTextSimple,
+                        FieldName = ParamsNames.Surname,
+                        Value = Model.Surname,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldSurname)]),
+                    };
+                }            
+                <vc:input-text-simple input-model="filterSurName">
+                </vc:input-text-simple>
+            </div>
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel filterName = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputTextSimple,
+                        FieldName = ParamsNames.Name,
+                        Value = Model.Name,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldName)]),
+                    };
+                }             
+                <vc:input-text-simple input-model="filterName">
+                </vc:input-text-simple>
+            </div>
+        </div>
+
+        <div class="row row-line-after">
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel filterEmail = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputTextSimple,
+                        FieldName = ParamsNames.Email,
+                        Value = Model.Email,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldEmail)]),
+                    };
+                }             
+                <vc:input-text-simple input-model="filterEmail">
+                </vc:input-text-simple>
+            </div>
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel filterRoles = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.OptionsSelect,
+                        FieldName = ParamsNames.Roles,
+                        ChoiceOptions = Model.Roles,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedRoleProfile)]),
+                        IsMultiple = true,
+                    };
+                }             
+                <vc:input-select input-model="filterRoles">
+                </vc:input-select>
+            </div>
+        </div>
+        
+        @{ 
+            ButtonsBackSubmitViewModel submitBtnModel = new ButtonsBackSubmitViewModel()
+            {
+                Id = "submit-search-user",
+                SubmitLabel = _localizer[nameof(LocalizedStr.SearchSubmitButton)],
+                HideBackButtonComponent = true,
+                BackButtonUrlType = BackUrlConfig.Missing, //back button is hidden
+            };
+        }
+        <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+                 model=@submitBtnModel/>
+    </form>
+
+    @if (showResults)
+    {
+        <div class="row row-line-x2-before">
+            <div class="col xl12 l12 s12 m12">
+                <h2 class="generic-secondary-title">
+                    @_localizer[nameof(LocalizedStr.SharedSearchResultsTableTitle)]
+                </h2>
+            </div>
+        </div>
+           
+        <div class="row row-line-after">
+            <div class="col xl12 l12 m12 s12 force-zero-padding">
+                <table id="search-results-table" 
+                       class="display"
+                       cellpadding="0">
+                </table>
+            </div>
+        </div>
+
+        <div class="row row-line-before">
+            <div class="col xl12 l12 m12 s12">
+                <ul class="collection with-header legend">
+                    <li class="collection-header legend-header text-bigger strong">
+                        @_localizer[nameof(LocalizedStr.SharedKeyLineLabel)]
+                    </li>
+                    <li class="collection-item legend-item">
+                        <i class="@WebAppConstants.HtmlStandardIconClasses legend-sample supervisor"
+                           >@WebAppConstants.HtmlCodeStop</i>
+                        @_localizer[nameof(LocalizedStr.UserManagementKeyLineSupervisor)]
+                    </li>
+                    <li class="collection-item legend-item">
+                        <i class="@WebAppConstants.HtmlStandardIconClasses legend-sample ex-supervisor-active"
+                           >@WebAppConstants.HtmlCodeStop</i>
+                        @_localizer[nameof(LocalizedStr.UserManagementKeyLineExSupervisorActive)]
+                    </li>
+                    <li class="collection-item legend-item">
+                        <i class="@WebAppConstants.HtmlStandardIconClasses legend-sample ex-supervisor-disabled"
+                           >@WebAppConstants.HtmlCodeStop</i>
+                        @_localizer[nameof(LocalizedStr.UserManagementKeyLineExSupervisorDisabled)]
+                    </li>
+                </ul>
+            </div>
+        </div>
+    } 

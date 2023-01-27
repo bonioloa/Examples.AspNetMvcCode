@@ -1,0 +1,466 @@
+﻿@model ReportExportViewModel
+
+@inject ContextUser _contextUser
+@inject MainLocalizer _localizer
+@inject HtmlMainLocalizer _htmlLocalizer
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.ReportAdvancedPageTitle)]);
+
+    ViewData.SetUseGridExportToFile(true);
+
+    IDictionary<string, string> routeVars = new Dictionary<string, string>();
+
+    string submitUrl =
+            Url.Action(MvcComponents.ActReportingAdvancedSaveLayout, MvcComponents.CtrlReporting);
+}
+@section styles
+{   
+}
+@section scripts
+{
+    @*grid export script are included in layout using flag ViewData.SetUseGridExportToFile*@
+
+    <script > 
+        var SharedVarsFormDynamic = Immutable.Map({
+            'SubmitUrl': '@submitUrl',
+        });
+    </script>
+
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = WebAppConstants.AppPathScriptsPages
+                             , FileName= "report-advanced"
+                         })/>
+}
+
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@_localizer[nameof(LocalizedStr.ReportAdvancedPageTitle)].ToString()"/>
+
+
+<form asp-controller="@MvcComponents.CtrlReporting"
+      asp-action="@MvcComponents.ActReportingAdvanced"
+      method="get"
+      autocomplete="off"> @*get does not need anti forgery*@
+
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">            
+            @{
+                InputControlViewModel selectProcess = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.OptionsSelect,
+                    FieldName = ParamsNames.ProcessId,
+                    ChoiceOptions = Model.ProcessSelect,
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelProcess)]),
+                    IsMandatory = true,
+                };
+            }
+            <vc:input-select input-model="selectProcess">
+            </vc:input-select>
+        </div>
+    </div>
+
+
+    
+    <div class="row row-line-after">
+        <div class="input-field col s12 m6 l6 xl6">
+            @{
+                InputControlViewModel inputDateSubmitFrom = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.InputDate,
+                    FieldName = ParamsNames.DateSubmitFrom,
+                    Value = Model.DateSubmitFrom.ToStringDateSortableInvariant(),                   
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitFrom)]),
+                };
+            }
+            <vc:input-date input-model="inputDateSubmitFrom">
+            </vc:input-date>
+        </div>
+
+        <div class="input-field col s12 m6 l6 xl6">
+            @{
+                InputControlViewModel inputDateSubmitTo = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.InputDate,
+                    FieldName = ParamsNames.DateSubmitTo,
+                    Value = Model.DateSubmitTo.ToStringDateSortableInvariant(),
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitTo)]),
+                };
+            }
+            <vc:input-date input-model="inputDateSubmitTo">
+            </vc:input-date>
+        </div>
+    </div>
+
+
+
+    @if(Model.EnableDateExpirationFilter)
+    {
+        <div class="row row-line-after">
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel inputDateExpirationFrom = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputDate,
+                        FieldName = ParamsNames.DateExpirationFrom,
+                        Value = Model.DateExpirationFrom.ToStringDateSortableInvariant(),
+                   
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationFrom)]),
+                    };
+                }
+                <vc:input-date input-model="inputDateExpirationFrom">
+                </vc:input-date>
+            </div>
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel inputDateExpirationTo = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputDate,
+                        FieldName = ParamsNames.DateExpirationTo,
+                        Value = Model.DateExpirationTo.ToStringDateSortableInvariant(),
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationTo)]),
+                    };
+                }
+                <vc:input-date input-model="inputDateExpirationTo">
+                </vc:input-date>
+            </div>
+        </div>
+    }
+
+    <div class="row row-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+            @{
+                InputControlViewModel inputRadioForLinkedItems = 
+                    new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.OptionsRadio,
+                        FieldName = ParamsNames.AddLinkedItemsToResults,
+                        ChoiceOptions = 
+                            new List<OptionViewModel>
+                            {
+                                new OptionViewModel
+                                {
+                                    Value = AppConstants.OptionAffirmativeValue,
+                                    Description = _htmlLocalizer[nameof(HtmlLocalization.SharedLabelPositive)],
+                                    Selected = Model.LinkedItemsToResults,
+                                },
+                                new OptionViewModel
+                                {
+                                    Value = AppConstants.OptionNegativeValue,
+                                    Description = _htmlLocalizer[nameof(HtmlLocalization.SharedLabelNegative)],
+                                    Selected = !Model.LinkedItemsToResults,
+                                }
+                            },
+                        Description = _htmlLocalizer[nameof(HtmlLocalization.ReportFilterRegistrationsLinkedDataLabel)],
+                    };
+            }
+            <vc:input-radio input-model="inputRadioForLinkedItems">
+            </vc:input-radio>
+        </div>
+    </div>
+
+    @*javascript will enable this button only when one process apart from Tutti will be selected*@
+    @{ 
+        ButtonsBackSubmitViewModel statisticsBtnModel = new ButtonsBackSubmitViewModel()
+        {
+            Id = "btn-get-report-advanced-for-process",
+            SubmitLabel = _localizer[nameof(LocalizedStr.ReportAdvancedButton)],
+            HideBackButtonComponent = true,
+            BackButtonUrlType = BackUrlConfig.Missing, //back button is hidden
+        };
+    }
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@statisticsBtnModel/>
+</form>
+
+
+@if(Model.ShowMessageNoResultsFound)
+{
+    <div id="report-no-results-warning"
+            class="row row-line-x2-before row-line-x2-after">
+        <div class="col s12 m12 l12 xl12 site-color-warn">        
+            @_localizer[nameof(LocalizedStr.SharedReportMessageNoResults)]
+        </div>
+    </div>
+}
+@if(!Model.ShowMessageNoResultsFound 
+    && !Model.FilterPreloadCall
+    && Model.DataSourceGrid.StringHasValue())
+{
+    <form id="form-report-adv"
+          method="post" 
+          asp-antiforgery="true"
+          class="ajax-post"
+          autocomplete="off" >
+
+        <input type="hidden" id="img" asp-for="TenantImage"/>
+    </form>
+
+    <div class="row row-line-x3-before row-line-after">
+        <div class="col s12 m12 l12 xl12 row-line-x2-after"> 
+            <div>        
+                @(Html.DevExtreme()
+                    .DataGrid()
+                    .ID("gridContainer")
+                    .DataSource(new JS(Model.DataSourceGrid))
+                    .KeyExpr("Index")
+                    .Columns(columns => {ConfigureColumns(columns, Model.ColumnsOptionsList);})
+                    .AllowColumnReordering(true)
+                    .ColumnMinWidth(150)
+                    .ShowRowLines(true)
+                    .Scrolling( scrolling => scrolling.Mode(GridScrollingMode.Standard))
+                    .Scrolling( scr => scr.ShowScrollbar(ShowScrollbarMode.Always))
+                    .Scrolling( scrolling => scrolling.ColumnRenderingMode(GridColumnRenderingMode.Standard))
+                    .Selection(s => s.Mode(SelectionMode.Multiple))
+                    .Export(e => e.Enabled(true).AllowExportSelectedData(true))
+                    .OnExporting("exporting")
+                    .ShowBorders(true)
+                    .AllowColumnResizing(true)
+    
+                    .Grouping(e =>e.AutoExpandAll(true))
+                    .GroupPanel(e =>e.Visible(true))
+
+                    .RowAlternationEnabled(true)
+                    .Paging(p => p.PageSize(10))
+                    .Pager(p => 
+                            p.ShowPageSizeSelector(true)
+                             .AllowedPageSizes(new[] { 10, 25, 50, 100 })
+                        )
+                    .SearchPanel(s => 
+                            s.Visible(true)
+                             .HighlightCaseSensitive(true)
+                        )
+                    .FilterRow(f => f.Visible(true))
+                    .HeaderFilter(f => f.Visible(true))
+                    .ColumnChooser(c => 
+                        c.Enabled(true)
+                         .Mode(GridColumnChooserMode.Select)
+                        )
+
+                    .Toolbar(toolbar => {
+                        toolbar.Items(items => {
+                            items.Add().Name("groupPanel");
+                            @*items.Add()
+                                 .Location(ToolbarItemLocation.After)
+                                 .Widget(w =>
+                                        w.Button()
+                                         .Icon("exportpdf")
+                                         .Text("Export to PDF")
+                                         .OnClick("exportToPDF")
+                                        );*@
+                            @*items.Add()
+                                 .Location(ToolbarItemLocation.Before)
+                                 .Widget(w =>
+                                        w.Button()
+                                         //.Icon("exportpdf")
+                                         .Text("Save Layout")
+                                         .OnClick("saveLayoutAsTemplate")
+                                );
+                            items.Add()
+                                 .Location(ToolbarItemLocation.Before)
+                                 .Widget(w =>
+                                        w.Button()
+                                         //.Icon("exportpdf")
+                                         .Text("Load Layout")
+                                         .OnClick("loadTemplateLayout")
+                                );*@
+                            items.Add().Name("exportButton");
+                            items.Add().Name("columnChooserButton");
+                            items.Add().Name("searchPanel");
+                        });
+                })
+                )
+            </div>
+        </div> 
+    </div>
+
+    @*usiamo qui le icone di dev express perchè le icone material non hanno tutte le tipologie necessarie*@
+    <div class="row row-line-x2-before row-line-after">
+        @{
+            string tooltipDescription = string.Empty;
+            string tooltipPosition = string.Empty;
+            tooltipDescription = $"{WebAppConstants.HtmlAttrTooltipDescription}={_localizer[nameof(LocalizedStr.DataGridExportToPdf)]}";
+            //for now, we use only this position as default
+            tooltipPosition = $"{WebAppConstants.HtmlAttrTooltipPosition}={WebAppConstants.HtmlValTop}";
+        }
+        <div class="col s12 m3 l3 xl3"> 
+            <a href="#" id="export-to-pdf"
+               class="minimal-margins @WebAppConstants.HtmlClassButton @WebAppConstants.HtmlClassButtonDefault @WebAppConstants.HtmlClassToolTip"
+               @tooltipPosition
+               @tooltipDescription
+               >@*<i class="@WebAppConstants.HtmlStandardIconClasses medium ">@WebAppConstants.HtmlPdf</i>*@
+                <i class="dx-icon-pdffile"></i>
+                 @_localizer[nameof(LocalizedStr.DataGridExportToPdf)]
+            </a>
+        </div>
+
+        <div class="col s12 m3 l3 xl3"> 
+            @{
+                string saveGridStateModalId = "modal-save-grid-state";
+                ModalTriggerViewModel saveGridStateModalTriggerModel = new ModalTriggerViewModel()
+                {
+                    ModalId = saveGridStateModalId,
+                    Description = _localizer[nameof(LocalizedStr.DataGridViewStateSave)].ToString(),
+                    AdditionalClasses = new List<string>() { "center-on-small-only"},//"minimal-margins", 
+                    ShowAsButton = true,
+                    IsPrimaryButton = true,
+                    //IconCode = WebAppConstants.HtmlCodeGroupAdd,
+                    //IconClasses = new List<string>() {"medium" },
+                    TooltipDescription = _localizer[nameof(LocalizedStr.DataGridViewStateSave)].ToString(),
+                };
+            }
+           
+	        <vc:modal-trigger model="saveGridStateModalTriggerModel">
+            </vc:modal-trigger>
+
+            <materialize-modal id="@saveGridStateModalId" 
+                                title="@_localizer[nameof(LocalizedStr.DataGridViewStateSave)].ToString()">
+
+                <form id="salva-stato-griglia-submit"
+                      class="ajax-post"
+                      asp-antiforgery="true" 
+                      method="post"
+                      autocomplete="off">
+
+                    <div class="row row-line-before row-line-after">
+                        <div class="col s12 m12 l12 xl12"> 
+                            <vc:input-text-area input-model="
+                                new InputControlViewModel()
+                                { 
+                                    ControlType = FormControlType.InputTextArea,
+                                    FieldName = ParamsNames.DataGridViewStateDescription,
+                                    CharactersLimit = 500,//stesso valore su db
+                                    IsMandatory = true,
+                                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldMessageSubject)]),
+                                }">
+                            </vc:input-text-area>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row row-line-before row-line-after">
+                        <div class="col s12 m12 l12 xl12"> 
+                            <vc:input-radio input-model="
+                                new InputControlViewModel()
+                                {
+                                    ControlType = FormControlType.OptionsRadio,
+                                    IsMandatory = true,
+                                    FieldName = ParamsNames.DataGridViewStateChooseIfSaveIsPersonal,
+                                    ChoiceOptions = 
+                                        new List<OptionViewModel>
+                                        {
+                                            new OptionViewModel
+                                            {
+                                                Value = AppConstants.OptionNegativeValue,
+                                                Description = _htmlLocalizer[nameof(HtmlLocalization.SharedLabelNegative)],
+                                                Selected = !Model.LinkedItemsToResults,
+                                            },
+                                            new OptionViewModel
+                                            {
+                                                Value = AppConstants.OptionAffirmativeValue,
+                                                Description = _htmlLocalizer[nameof(HtmlLocalization.SharedLabelPositive)],
+                                                Selected = Model.LinkedItemsToResults,
+                                            }
+                                        },
+                                    Description = _htmlLocalizer[nameof(HtmlLocalization.DataGridViewStateChooseIfSaveIsPersonal)],
+                                }">
+                            </vc:input-radio>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row row-line-before row-line-after">
+                        <div class="col s12 m12 l12 xl12"> 
+                            <vc:input-select input-model="
+                                new InputControlViewModel()
+                                {
+                                    ControlType = FormControlType.OptionsSelectMultiple,
+                                    IsMandatory = false,
+                                    FieldName = ParamsNames.DataGridViewStateChooseProfiles,
+                                    ChoiceOptions = _contextUser.SupervisorRolesList.MapFromContextToWeb(),
+                                    Description = _htmlLocalizer[nameof(HtmlLocalization.DataGridViewStateChooseProfiles)],
+                                };">
+                            </vc:input-select>
+                        </div>
+                    </div>
+
+
+                    @{ 
+                        ButtonsBackSubmitViewModel saveGridStateSubmitButtonModel = new ButtonsBackSubmitViewModel()
+                        {
+                            Id = "modal-save-grid-state-submit",
+                            SubmitLabel = _localizer[nameof(LocalizedStr.DataGridViewStateSubmit)],
+                            SubmitDisabled = true,
+                            HideBackButtonComponent = true,
+                            BackButtonUrlType = BackUrlConfig.Missing,
+                        };
+                    }
+                    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+                             model=@saveGridStateSubmitButtonModel/>
+                </form>
+
+            </materialize-modal>
+        </div>
+    </div>
+}
+
+
+@functions
+{
+    public void ConfigureColumns(
+        CollectionFactory<DataGridColumnBuilder<object>> columns
+        , HashSet<ReportingColumnFeaturesModel> myColumns
+    ) 
+    {
+        foreach (ReportingColumnFeaturesModel def in myColumns) 
+        {
+            if(def.SerializedOptionColors.StringHasValue())
+            {
+                columns
+                    .Add()
+                    .DataField(def.ColumnName)
+                    .CssClass("dx-column-color-cell")
+                    .Option("ColorList", def.SerializedOptionColors)
+                    .Option("ValueList", def.SerializedOptionValues)
+                    .CellTemplate(
+                        @<text>
+                            <% 
+                                var dict = { " " : " " };
+                                var values = JSON.parse(column.ValueList);
+                                var colors = JSON.parse(column.ColorList);
+
+                                for( i = 0; values.length > i ; i++)
+                                {
+                                    dict[values[i]] = colors[i];
+                                }
+
+                                t = value; 
+                                var b = dict[t];
+                            %>
+                            <div id="bck" style="height:100%; background-color : <%- b %> "> <%- value %> </div>
+                        </text>
+                        );
+            }
+            else
+            {
+                if(def.Visible)
+                {
+                    columns.Add().DataField(def.ColumnName);
+                }
+                else
+                {
+                    columns.Add().DataField(def.ColumnName).Visible(false);
+                }
+            }
+        };
+    }
+}

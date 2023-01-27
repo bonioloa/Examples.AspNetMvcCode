@@ -1,0 +1,27 @@
+﻿@model UserLoginViewModel
+
+@inject IMainLocalizer _localizer
+
+@{
+    Layout = MvcComponents.TemplateSplitPageFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.UserLoginPageTitle)]);
+    ViewData.SetLeftPanel(InfoAndLogo.LeftPanelTenant);
+    ViewData.SetRightPanel(InfoAndLogo.RightPanelLogoTenant);
+}
+@section styles
+{
+}
+@section scripts
+{
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = PathsStaticFilesRoot.AppPathScriptsPages
+                             , FileName= "login-user"
+                         })/>
+}
+
+<partial name="@MvcComponents.PartialLoginWithCredentialsForm" 
+         model="@Model"/>

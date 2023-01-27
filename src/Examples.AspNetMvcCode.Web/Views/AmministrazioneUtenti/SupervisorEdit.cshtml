@@ -1,0 +1,61 @@
+﻿@model UserEditSupervisorViewModel
+
+@inject IMainLocalizer _localizer
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.AdministrationManageEditSupervisor)]);
+}
+
+@section styles{
+}
+@section scripts{
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile"
+         model=@(
+                new IncludeLocalFilesViewModel()
+                {
+                    Type = IncludeType.Javascript
+                    , BasePath = PathsStaticFilesRoot.AppPathScriptsPages
+                    , FileName= "supervisor-edit"
+                }) />
+}
+
+    @*NOTA per questa view: per semplicità, le parti visibili agli amministratori applicativi 
+    NON VERRANNO LOCALIZZATE se non esiste già una localizzazione riutilizzabile*@
+
+
+
+    <partial name="@MvcComponents.SharedPartialTitlePageInSecureArea"
+             model="@_localizer[nameof(LocalizedStr.AdministrationManageEditSupervisor)].ToString()" />
+
+    @*includiamo tutti i componenti per generare tutti i possibili comandi sulla pagina,
+    i dati del modello piloteranno quali componenti saranno effettivamente disponibili*@
+
+
+    @await Component.InvokeAsync(typeof(UserTenantManagedIncludeComp), Model)
+
+
+    @*se utente ATTIVO abilita comando disattivazione utente (invio notifica email)*@
+    @*se utente DISATTIVATO abilita comando attivazione utente (invio email con credenziali). Riattivazione comporta il reset password dell'utenza*@
+
+    @await Component.InvokeAsync(typeof(UserStateSwitchComp), Model)
+
+
+    @*se utente incluso e ATTIVO visualizza comando reset password utente (invio email con EmailRecoverPasswordContentTemplate)*@
+    @await Component.InvokeAsync(typeof(UserResetPasswordComp), Model)
+
+
+    @*mostra dati utente in modalità readonly o modificabili, a seconda che l'utente sia Incluso e Attivo o no *@
+    @await Component.InvokeAsync(typeof(UserMainDataComp), Model)
+
+
+
+    <div class="row row-line-x2-before row-line-after">
+        <div class="col s12 m12 l12 xl12 left-align">
+            @await Component.InvokeAsync(
+                typeof(BackUrlComp)
+                , new BackUrlConfigViewModel(BackUrlConfig.UserSupervisorSearch)
+                )
+        </div>
+    </div>

@@ -1,0 +1,168 @@
+﻿@model UserNewSupervisorStartViewModel 
+
+@inject IMainLocalizer _localizer
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.UserNewSupervisorPageTitle)]);
+
+    string loginRestoredValue = string.Empty;
+    string nameRestoredValue = string.Empty;
+    string surnameRestoredValue = string.Empty;
+    string emailRestoredValue = string.Empty;
+    if (Model.UserNewSupervisorSaveInputRestore is not null)
+    {
+        loginRestoredValue = Model.UserNewSupervisorSaveInputRestore.Login;
+        nameRestoredValue = Model.UserNewSupervisorSaveInputRestore.Nome;
+        surnameRestoredValue = Model.UserNewSupervisorSaveInputRestore.Cognome;
+        emailRestoredValue = Model.UserNewSupervisorSaveInputRestore.Email;
+        //IMPORTANT ignore roles properties from Model.UserNewSupervisorSaveInputRestore 
+        // and use instead Model.RolesForSelectionWithRestoredFound
+    }
+}
+@section styles
+{
+}
+@section scripts
+{
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile"
+             model=@(
+                    new IncludeLocalFilesViewModel()
+                    {
+                        Type = IncludeType.Javascript
+                        , BasePath = PathsStaticFilesRoot.AppPathScriptsPages
+                        , FileName= "supervisor-new"
+                    }) />
+}
+
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea"
+         model="@_localizer[nameof(LocalizedStr.UserNewSupervisorPageTitle)].ToString()" /> 
+
+<form asp-controller="@MvcComponents.CtrlAdministrationUsersPost"
+      asp-action="@MvcComponents.ActUserNewSupervisorPost"
+      asp-antiforgery="true"
+      method="post"
+      autocomplete="off">
+
+@* no validation rule apart required, in case someone during configuration used a password
+    not compliant to standard regex*@
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputTextSimpleComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputTextSimple,
+                        FieldName = nameof(UserNewSupervisorSaveViewModel.Login),
+                        HideMandatorySymbol = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldUserLogin)]),
+                        Value = loginRestoredValue,
+                    }
+                )
+        </div>
+    </div>
+
+
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputTextSimpleComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputTextSimple,
+                        FieldName = nameof(UserNewSupervisorSaveViewModel.Nome),
+                        HideMandatorySymbol = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldName)]),
+                        Value = nameRestoredValue,
+                    }
+                )
+        </div>
+    </div>
+
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputTextSimpleComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputTextSimple,
+                        FieldName = nameof(UserNewSupervisorSaveViewModel.Cognome),
+                        HideMandatorySymbol = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldSurname)]),
+                        Value = surnameRestoredValue,
+                    }
+                )
+        </div>
+    </div>
+
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputTextSimpleComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.InputTextSimple,
+                        InputSimpleType = InputSimpleType.Email,
+                        FieldName = nameof(UserNewSupervisorSaveViewModel.Email),
+                        HideMandatorySymbol = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldEmail)]),
+                        Value = emailRestoredValue,
+                    }
+                )
+        </div>
+    </div>
+
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputRadioComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.OptionsRadio,
+                        FieldName = nameof(UserNewSupervisorSaveViewModel.ProfiloEsclusivo),
+                        HideMandatorySymbol = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelRolesExclusive)]),
+                        Options = 
+                            Model.RolesForSelectionWithRestored.ExclusiveRolesFound.OrderBy(role => role.Value)
+                                                                                   .ToList()
+                    }
+            )
+        </div>
+    </div>
+
+    <div class="row row-no-line-after optional-profiles"> @* optional-profiles: custom empty class for hide/show*@
+        <div class="input-field col s12 m12 l12 xl12">
+
+            @await Component.InvokeAsync(
+                typeof(FieldInputSelectComp)
+                , new FieldViewModel()
+                    {
+                        FieldType = FieldType.OptionsSelectMultiple,
+                        FieldName = nameof(UserNewSupervisorSaveViewModel.Profili),
+                        HideMandatorySymbol = true,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelRoles)]),
+                        Options = Model.RolesForSelectionWithRestored.SupervisorRolesFound.OrderBy(role => role.Value)
+                                                                                          .ToList()
+                    }
+                )
+        </div>
+    </div>
+
+
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit"
+             model=@(
+                    new ButtonsBackSubmitViewModel()
+                    {
+                        Id = "submit-new-supervisor",
+                        SubmitLabel = _localizer[nameof(LocalizedStr.SharedButtonCreate)],
+                        HideBackButtonComponent = true,
+                        BackButtonUrlType = BackUrlConfig.UserSupervisorSearch,//TODO rimanda alla ricerca senza ricordare i parametri della ricerca precedente
+                    }) />
+</form>

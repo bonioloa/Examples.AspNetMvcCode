@@ -1,0 +1,8 @@
+﻿@model IHtmlContent
+
+@inject IMainLocalizer _localizer
+
+<a class="no-pointer" href="#!">
+    <i class="@WebAppConstants.HtmlStandardIconClasses left profile-icon">@WebAppConstants.HtmlCodePermIdentity</i>
+    <span>@_localizer[nameof(LocalizedStr.SharedRoleProfile)]@CodeConstants.Colon@CodeConstants.Space@Model</span>
+</a>

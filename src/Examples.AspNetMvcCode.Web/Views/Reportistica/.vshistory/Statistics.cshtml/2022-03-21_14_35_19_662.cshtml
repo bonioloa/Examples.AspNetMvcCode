@@ -1,0 +1,181 @@
+﻿@model ReportStatisticsViewModel
+
+@inject MainLocalizer _localizer
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.ReportStatisticsPageTitle)]);
+    ViewData.SetUseChartJsLibrary(true);
+
+    IDictionary<string, string> routeVars = new Dictionary<string, string>();
+
+    bool showStatisticsChart = Model.ShowStatisticsChart && Model.JsonStatisticsChart != null;
+}
+@section styles
+{   
+}
+@section scripts
+{
+    @*initialize vars to use in page JavaScript *@
+    <script>
+        var SharedConstStatisticsPage = Immutable.Map({
+            'ShowGraphic': @showStatisticsChart.ToString().ToLowerInvariant(),
+            'IconClasses': '@WebAppConstants.HtmlStandardIconClasses',
+            'LegendBoxIcon': '@WebAppConstants.HtmlCodeStop',
+            'InputIdProcessId':'@ParamsNames.ProcessId',
+            }
+        );
+
+       @if(showStatisticsChart && Model.JsonStatisticsChart.Data.HasValue())
+       {
+           //library needs to extend object so don't use immutable
+            @:var SharedChartData = @(Model.JsonStatisticsChart.Data);
+        }
+       @if(showStatisticsChart && Model.JsonStatisticsChart.SliceLabelsToStepSearchLinks.HasValue())
+       {
+            @:var SharedSliceLabelsToStepSearchLinks = Immutable.Map(@(Model.JsonStatisticsChart.SliceLabelsToStepSearchLinks));
+        }
+    </script>
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = WebAppConstants.AppPathScriptsPages
+                             , FileName= "statistics"
+                         })/>
+}
+
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@_localizer[nameof(LocalizedStr.ReportStatisticsPageTitle)].ToString()"/>
+
+
+<form asp-controller="@MvcComponents.CtrlReporting"
+      asp-action="@MvcComponents.ActReportingStatistics"
+      method="get"
+      autocomplete="off"> @*get does not need anti forgery*@
+
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">            
+            @{
+                InputControlViewModel selectProcess = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.OptionsSelect,
+                    FieldName = ParamsNames.ProcessId,
+                    ChoiceOptions = Model.ProcessSelect,
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.ReportStatisticsSelectLabel)]),
+                    IsMandatory = true,
+                };
+            }
+            <vc:input-select input-model="selectProcess">
+            </vc:input-select>
+        </div>
+    </div>
+    
+    <div class="row row-line-after">
+        <div class="input-field col s12 m6 l6 xl6">
+            @{
+                InputControlViewModel inputDateSubmitFrom = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.InputDate,
+                    FieldName = ParamsNames.DateSubmitFrom,
+                    Value = Model.DateSubmitFrom.ToStringDateSortableInvariant(),
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitFrom)]),
+                };
+            }
+            <vc:input-date input-model="inputDateSubmitFrom">
+            </vc:input-date>
+        </div>
+
+        <div class="input-field col s12 m6 l6 xl6">
+            @{
+                InputControlViewModel inputDateSubmitTo = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.InputDate,
+                    FieldName = ParamsNames.DateSubmitTo,
+                    Value = Model.DateSubmitTo.ToStringDateSortableInvariant(),
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitTo)]),
+                };
+            }
+            <vc:input-date input-model="inputDateSubmitTo">
+            </vc:input-date>
+        </div>
+    </div>
+
+
+    @if(Model.EnableDateExpirationFilter)
+    {
+        <div class="row row-line-after">
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel inputDateExpirationFrom = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputDate,
+                        FieldName = ParamsNames.DateExpirationFrom,
+                        Value = Model.DateExpirationFrom.ToStringDateSortableInvariant(),
+                   
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationFrom)]),
+                    };
+                }
+                <vc:input-date input-model="inputDateExpirationFrom">
+                </vc:input-date>
+            </div>
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel inputDateExpirationTo = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputDate,
+                        FieldName = ParamsNames.DateExpirationTo,
+                        Value = Model.DateExpirationTo.ToStringDateSortableInvariant(),
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationTo)]),
+                    };
+                }
+                <vc:input-date input-model="inputDateExpirationTo">
+                </vc:input-date>
+            </div>
+        </div>
+    }
+
+    @*javascript will enable this button only when one process apart from Tutti will be selected*@
+    @{ 
+        ButtonsBackSubmitViewModel statisticsBtnModel = new ButtonsBackSubmitViewModel()
+        {
+            Id = "btn-get-statistics-for-process",
+            SubmitLabel = _localizer[nameof(LocalizedStr.ReportStatisticsButton)],
+            HideBackButtonComponent = true,
+            BackButtonUrlType = BackUrlConfig.Missing, //back button is hidden
+        };
+    }
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@statisticsBtnModel/>
+</form>
+
+
+
+@if (showStatisticsChart)
+{
+    <div class="row row-line-x3-before row-line-after">
+        <div class="col s12 m7 l8 xl8 row-line-x2-after"> 
+            <div id="canvas-holder">
+                <canvas id="chart-area" class="app-chart"/> 
+            </div>
+        </div>
+
+        <div class="col s12 m5 l4 xl4"> 
+            <ul id="chart-legend" class="collection with-header legend">
+                <li class="collection-header legend-header text-bigger strong">
+                    @_localizer[nameof(LocalizedStr.SharedKeyLineLabel)]
+                </li>
+                @*Legend list will be filled by javascript this is an example element
+                <li class="collection-item legend-item">
+                    <i class="@WebAppConstants.HtmlStandardIconClasses legend-sample" 
+                        style="color:@label.Color;">@WebAppConstants.HtmlCodeStop</i>
+                    @label
+                </li>*@
+            </ul>
+        </div>
+    </div>
+} @*end showStatisticsChart*@ 

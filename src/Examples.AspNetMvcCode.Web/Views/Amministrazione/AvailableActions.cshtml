@@ -1,0 +1,89 @@
+﻿@*@model *@
+
+@inject IAuthorizationCustomWeb _webAuthorizationCustom
+@inject IMainLocalizer _localizer
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.AdministrationOperationsAvailableTitle)]);
+
+    bool userIsAdminApplication = 
+        await _webAuthorizationCustom.UserIsAdminApplicationAsync().ConfigureAwait(false);
+}
+@section styles
+{
+}
+
+@section scripts
+{
+}
+
+
+
+<partial name=@MvcComponents.SharedPartialTitlePageInSecureArea
+         model=@_localizer[nameof(LocalizedStr.AdministrationOperationsAvailableTitle)].ToString()/>
+
+
+@* available for all types of admin*@
+<div class="row row-line-after">
+    <div class="col xl12 l12 s12 m12">
+        <div class="card-panel">
+            <a asp-controller=@MvcComponents.CtrlAdministrationUsers
+               asp-action=@MvcComponents.ActSupervisorManagement
+               class="show-preloader">
+                @_localizer[nameof(LocalizedStr.AdministrationManageSupervisors)]
+            </a>
+        </div>
+    </div>
+</div>
+
+
+@if(await _webAuthorizationCustom.UserIsAdminTenantAsync().ConfigureAwait(false)
+   && _optProduct.Value.Product == Product)
+{
+    <div class="row row-line-after">
+        <div class="col xl12 l12 s12 m12">
+            <div class="card-panel">
+                <a asp-controller=@("")
+                   asp-action=@("")
+                   class="show-preloader"> @*deve essere caricato da model per capire se si usano progressivi di lavorazione*@
+                    @_localizer[nameof(LocalizedStr.AdministrationManageProgressives)]
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@if (userIsAdminApplication && _optProduct.Value.Product == Product.)
+{
+    <div class="row row-line-after">
+        <div class="col xl12 l12 s12 m12">
+            <div class="card-panel">
+                <a asp-controller=@MvcComponents.CtrlAdminUploadAttachments
+                   asp-action=@MvcComponents.ActAdminPrepareAttachmentFormUpload
+                   class="show-preloader">
+                    caricamento allegati su passaggi elementi esistenti
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (userIsAdminApplication && _optProduct.Value.Product == Product.)
+{
+    <div class="row row-line-after">
+        <div class="col xl12 l12 s12 m12">
+            <div class="card-panel">
+                <a asp-controller=@MvcComponents.CtrlAdminUploadItemsComplete
+                   asp-action=@MvcComponents.ActAdminUploadCompleteItemsFromExcel
+                   class="show-preloader">
+                    caricamento completo elementi e relativi passaggi (storico preesistente su altri supporti e migrato)
+                </a>
+            </div>
+        </div>
+    </div>
+}

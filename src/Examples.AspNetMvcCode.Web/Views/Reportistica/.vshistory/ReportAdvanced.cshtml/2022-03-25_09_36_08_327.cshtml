@@ -1,0 +1,400 @@
+﻿@model ReportExportViewModel
+
+@inject MainLocalizer _localizer
+@inject HtmlMainLocalizer _htmlLocalizer
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+
+@{
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.ReportAdvancedPageTitle)]);
+
+    IDictionary<string, string> routeVars = new Dictionary<string, string>();
+
+    //bool showAdvancedReport = Model.ShowStatisticsChart; /*&& Model.JsonStatisticsChart != null;*/
+}
+@section styles
+{   
+}
+@section scripts
+{
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.14/jspdf.plugin.autotable.min.js"></script>
+    
+
+   @* <script>
+        window.jsPDF = window.jspdf.jsPDF;
+        applyPlugin(window.jsPDF);
+    </script>*@
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.10.1/polyfill.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/3.8.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                         { 
+                             Type = IncludeType.Javascript
+                             , BasePath = WebAppConstants.AppPathScriptsPages
+                             , FileName= "report-advanced"
+                         })/>
+}
+
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@_localizer[nameof(LocalizedStr.ReportAdvancedPageTitle)].ToString()"/>
+
+
+<form asp-controller="@MvcComponents.CtrlReporting"
+      asp-action="@MvcComponents.ActReportingAdvanced"
+      method="get"
+      autocomplete="off"> @*get does not need anti forgery*@
+
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">            
+            @{
+                InputControlViewModel selectProcess = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.OptionsSelect,
+                    FieldName = ParamsNames.ProcessId,
+                    ChoiceOptions = Model.ProcessSelect,
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelProcess)]),
+                    IsMandatory = true,
+                };
+            }
+            <vc:input-select input-model="selectProcess">
+            </vc:input-select>
+        </div>
+    </div>
+
+    @if(Model.ProcessLinkedSelect.HasValues())
+    {
+        <div class="row row-no-line-after">
+            <div class="input-field col s12 m12 l12 xl12">            
+                @{
+                    InputControlViewModel selectLinkedProcess = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.OptionsSelect,
+                        FieldName = ParamsNames.ProcessId,
+                        ChoiceOptions = Model.ProcessLinkedSelect,
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.ReportStatisticsSelectLabel)]),
+                        IsMandatory = true,
+                    };
+                }
+                <vc:input-select input-model="selectProcess">
+                </vc:input-select>
+            </div>
+        </div>
+    }
+
+    
+    <div class="row row-line-after">
+        <div class="input-field col s12 m6 l6 xl6">
+            @{
+                InputControlViewModel inputDateSubmitFrom = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.InputDate,
+                    FieldName = ParamsNames.DateSubmitFrom,
+                    Value = Model.DateSubmitFrom.ToStringDateSortableInvariant(),                   
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitFrom)]),
+                };
+            }
+            <vc:input-date input-model="inputDateSubmitFrom">
+            </vc:input-date>
+        </div>
+
+        <div class="input-field col s12 m6 l6 xl6">
+            @{
+                InputControlViewModel inputDateSubmitTo = new InputControlViewModel()
+                {
+                    ControlType = FormControlType.InputDate,
+                    FieldName = ParamsNames.DateSubmitTo,
+                    Value = Model.DateSubmitTo.ToStringDateSortableInvariant(),
+                    Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateSubmitTo)]),
+                };
+            }
+            <vc:input-date input-model="inputDateSubmitTo">
+            </vc:input-date>
+        </div>
+    </div>
+
+
+
+    @if(Model.EnableDateExpirationFilter)
+    {
+        <div class="row row-line-after">
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel inputDateExpirationFrom = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputDate,
+                        FieldName = ParamsNames.DateExpirationFrom,
+                        Value = Model.DateExpirationFrom.ToStringDateSortableInvariant(),
+                   
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationFrom)]),
+                    };
+                }
+                <vc:input-date input-model="inputDateExpirationFrom">
+                </vc:input-date>
+            </div>
+
+            <div class="input-field col s12 m6 l6 xl6">
+                @{
+                    InputControlViewModel inputDateExpirationTo = new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.InputDate,
+                        FieldName = ParamsNames.DateExpirationTo,
+                        Value = Model.DateExpirationTo.ToStringDateSortableInvariant(),
+                        Description = new HtmlString(_localizer[nameof(LocalizedStr.SharedFieldLabelDateExpirationTo)]),
+                    };
+                }
+                <vc:input-date input-model="inputDateExpirationTo">
+                </vc:input-date>
+            </div>
+        </div>
+    }
+
+    <div class="row row-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+            @{
+                InputControlViewModel inputCheckForLinkedItems = 
+                    new InputControlViewModel()
+                    {
+                        ControlType = FormControlType.OptionsCheckBox,
+                        FieldName = ParamsNames.AddLinkedItemsToResults,
+                        ChoiceOptions = 
+                            new List<OptionViewModel>
+                            {
+                                new OptionViewModel
+                                {
+                                    Value = WebAppConstants.HtmlValueIncludeLinked,
+                                    Description = _htmlLocalizer[nameof(HtmlLocalization.ReportFilterRegistrationsLinkedDataInclude)],
+                                    Selected = Model.LinkedItemsToResults,
+                                }
+                            },
+                        Description = _htmlLocalizer[nameof(HtmlLocalization.ReportFilterRegistrationsLinkedDataLabel)],
+                    };
+            }
+            <vc:input-check input-model="inputCheckForLinkedItems">
+            </vc:input-check>
+        </div>
+    </div>
+
+    @*javascript will enable this button only when one process apart from Tutti will be selected*@
+    @{ 
+        ButtonsBackSubmitViewModel statisticsBtnModel = new ButtonsBackSubmitViewModel()
+        {
+            Id = "btn-get-report-advanced-for-process",
+            SubmitLabel = _localizer[nameof(LocalizedStr.ReportAdvancedButton)],
+            HideBackButtonComponent = true,
+            BackButtonUrlType = BackUrlConfig.Missing, //back button is hidden
+        };
+    }
+    <partial name="@MvcComponents.SharedPartialButtonsBackSubmit" 
+             model=@statisticsBtnModel/>
+</form>
+
+
+@if(Model.ShowMessageNoResultsFound)
+{
+    <div id="report-no-results-warning"
+            class="row row-line-x2-before row-line-x2-after">
+        <div class="col s12 m12 l12 xl12 site-color-warn">        
+            @_localizer[nameof(LocalizedStr.SharedReportMessageNoResults)]
+        </div>
+    </div>
+}
+@if(!Model.ShowMessageNoResultsFound 
+    && !Model.FilterPreloadCall
+    && Model.DataSourceGrid.StringHasValue())
+{
+    <input type="hidden" id="img" asp-for="TenantImage"/>
+
+    <div class="row row-line-x3-before row-line-after">
+        <div class="col s12 m12 l12 xl12 row-line-x2-after"> 
+            <div>        
+                @(Html.DevExtreme()
+                    .DataGrid()
+                    .ID("gridContainer")
+                    .DataSource(new JS(Model.DataSourceGrid))
+                    .KeyExpr("ID")
+                    .Columns(columns => {ConfigureColumns(columns, Model.ColumnsOptionsList);})
+                    .AllowColumnReordering(true)
+                    .ColumnMinWidth(150)
+                    .ShowRowLines(true)
+                    .Scrolling( scrolling => scrolling.Mode(GridScrollingMode.Standard))
+                    .Scrolling( scr => scr.ShowScrollbar(ShowScrollbarMode.Always))
+                    .Scrolling(scrolling => scrolling.ColumnRenderingMode(GridColumnRenderingMode.Standard))
+                    .Selection(s => s.Mode(SelectionMode.Multiple))
+                    .Export(e => e.Enabled(true).AllowExportSelectedData(true))
+                    .OnExporting("exporting")
+                    .ShowBorders(true)
+                    .AllowColumnResizing(true)
+    
+                    .Grouping(e =>e.AutoExpandAll(true))
+                    .GroupPanel(e =>e.Visible(true))
+
+                    .RowAlternationEnabled(true)
+                    .Paging(p => p.PageSize(10))
+                    .Pager(p => 
+                            p.ShowPageSizeSelector(true)
+                             .AllowedPageSizes(new[] { 10, 25, 50, 100 })
+                        )
+                    .SearchPanel(s => 
+                            s.Visible(true)
+                             .HighlightCaseSensitive(true)
+                        )
+                    .FilterRow(f => f.Visible(true))
+                    .HeaderFilter(f => f.Visible(true))
+                    .ColumnChooser(c => 
+                        c.Enabled(true)
+                         .Mode(GridColumnChooserMode.Select)
+                        )
+
+                    .Toolbar(toolbar => {
+                        toolbar.Items(items => {
+                            items.Add().Name("groupPanel");
+                            items.Add()
+                                 .Location(ToolbarItemLocation.After)
+                                 .Widget(w =>
+                                        w.Button()
+                                         .Icon("exportpdf")
+                                         .Text("Export to PDF")
+                                         .OnClick("exportToPDF")
+                                        );
+                            items.Add().Name("exportButton");
+                            items.Add().Name("columnChooserButton");
+                            items.Add().Name("searchPanel");
+                        });
+                })
+                )
+            </div>
+        </div> 
+    </div>
+}
+
+
+@functions
+{
+    public void ConfigureColumns(
+        CollectionFactory<DataGridColumnBuilder<object>> columns
+        , HashSet<ReportingColumnFeaturesModel> myColumns
+    ) 
+    {
+        foreach (ReportingColumnFeaturesModel def in myColumns) 
+        {
+            if(def.SerializedOptionColors.StringHasValue())
+            {
+                columns
+                    .Add()
+                    .DataField(def.ColumnName)
+                    .CssClass("dx-column-color-cell")
+                    .Option("ColorList", def.SerializedOptionColors)
+                    .Option("ValueList", def.SerializedOptionValues)
+                    .CellTemplate(
+                        @<text>
+                            <% 
+                                var dict = { " " : " " };
+                                var values = JSON.parse(column.ValueList);
+                                var colors = JSON.parse(column.ColorList);
+
+                                for( i = 0; values.length > i ; i++)
+                                {
+                                    dict[values[i]] = colors[i];
+                                }
+
+                                t = value; 
+                                var b = dict[t];
+                            %>
+                            <div id="bck" style="height:100%; background-color : <%- b %> "> <%- value %> </div>
+                        </text>
+                    );
+            }
+            else
+            {
+                columns.Add().DataField(def.ColumnName);
+            }
+        };
+    }
+}
+
+
+@*
+<script>
+    function exporting(e) {
+        var workbook = new ExcelJS.Workbook();
+        var worksheet = workbook.addWorksheet('Registro');
+
+        DevExpress.excelExporter.exportDataGrid({
+            component: e.component,
+            worksheet: worksheet,
+            autoFilterEnabled: true
+        }).then(function () {
+            workbook.xlsx.writeBuffer().then(function (buffer) {
+                saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'Registri.xlsx');
+            });
+        });
+        e.cancel = true;
+    }
+
+    function exportToPDF() {
+        var currentdate = new Date(); 
+        var datetime = " " + currentdate.getDate() + "/"
+                + (currentdate.getMonth()+1)  + "/" 
+                + currentdate.getFullYear() + " "  
+                + currentdate.getHours() + ":"  
+                + currentdate.getMinutes() + ":" 
+                + currentdate.getSeconds();
+        var doc = new jsPDF("l","mm","a2",true,16);
+        var vimg = document.getElementById("img").value;
+        var dataGrid = $("#gridContainer").dxDataGrid("instance");
+        DevExpress.pdfExporter.exportDataGrid(
+        {
+            jsPDFDocument: doc,
+            component: dataGrid,
+            autoTableOptions: 
+            {
+                startY: 50,
+                //mandare in pagina nuova un riga invece di spezzarla
+                style : {overflow: 'linebreak'},
+                headStyles : { textColor : [0, 0, 0], fillColor : [230, 232, 242] }, 
+                alternateRowStyles : { textColor : [0, 0, 0], fillColor : [230, 232, 242] },
+                margin: { horizontal: 5 },
+                theme: 'plain',
+                showHead: 'everyPage',
+                didDrawPage: function (data) 
+                {
+                    data.settings.margin.top = 50;
+                    // Header
+                    doc.setFontSize(20);
+                    doc.setTextColor(40);
+                    doc.text("Report Registri", 100, 20);
+
+                    doc.setFontSize(10);
+                    doc.setTextColor(40);
+                    doc.text(datetime, 100, 30);
+
+                    var imgData=vimg;
+                    doc.addImage(imgData, 'png', 10, 10, 70, 20)
+
+                    // Footer
+                    var str = "Pagina " + doc.internal.getNumberOfPages();
+
+                    doc.setFontSize(10);
+
+                    // jsPDF 1.4+ uses getWidth, <1.4 uses .width
+                    var pageSize = doc.internal.pageSize;
+                    var pageHeight = pageSize.height
+                        ? pageSize.height
+                        : pageSize.getHeight();
+                    doc.text(str, data.settings.margin.left, pageHeight - 10);
+                }
+            }
+        }).then(function() {
+            doc.save("Registri.pdf");
+        });
+
+    }
+</script>*@

@@ -1,0 +1,42 @@
+﻿@model UserEditSupervisorViewModel
+
+@*to be used when used is deactivated, all data must be shown as readonly*@
+<div class="row row-line-after">
+    <div class="col xl12 l12 s12 m12">
+        <div class="card-panel">
+            Login: <strong>@Model.Login</strong><br /><br />
+            Nome: <strong>@Model.Name</strong><br /><br />
+            Cognome: <strong>@Model.Surname</strong><br /><br />
+            Email: <strong>@Model.Email</strong><br /><br />
+            <br />
+
+            @if (Model.RolesSelection is not null && Model.RolesSelection.ExclusiveRolesFound.HasValues()
+                && Model.RolesSelection.ExclusiveRolesFound.Any(exRole => exRole.Value != ExclusiveRole.None.ToString() && exRole.Selected))
+            {
+                string profileDescription = 
+                    "Profilo esclusivo: "
+                        + Model.RolesSelection.ExclusiveRolesFound.Where(exRole => exRole.Selected).Single().Description.GetStringContent();
+
+                @Html.Raw(profileDescription)
+            }
+            
+            @if (Model.RolesSelection is not null && Model.RolesSelection.SupervisorRolesFound.HasValues()
+                    && Model.RolesSelection.SupervisorRolesFound.Any(exRole => exRole.Selected))
+            {
+                <ul class="collection with-header">
+                    <li class="collection-header">
+                        Profili associati:
+                    </li>
+                    @foreach (OptionViewModel role in 
+                                Model.RolesSelection.SupervisorRolesFound.Where(exRole => exRole.Selected)
+                                                                         .OrderBy(exRole => long.Parse(exRole.Value)))
+                    {
+                        <li class="collection-item">@role.Description</li>
+                    }
+                </ul>
+            }
+
+            
+        </div>
+    </div>
+</div>

@@ -1,0 +1,42 @@
+﻿@model string
+
+@inject IMainLocalizer _localizer
+
+@{
+    Layout = MvcComponents.TemplatePanelPageFile;
+
+    ViewData.SetTitle("sso login");//_localizer[nameof(LocalizedStr.UserChangePasswordFormPageTitle)];
+    ViewData.SetLogo(InfoAndLogo.CentralPanelLogoProduct);//use product, no info on tenant available here
+    ViewData.SetShowLanguageSelector(false);//page can't handle localization, and it appears briefly, not worth the hassle
+}
+@section styles
+{   
+}
+@section scripts
+{
+<script>
+    $(function () {
+        $('#sso-form').submit();
+    });
+    </script>
+}
+
+
+<form asp-controller="@MvcComponents.CtrlAccessSso"
+      asp-action="@MvcComponents.ActPerformSsoLogin"
+      asp-antiforgery="true"
+      method="post"
+      autocomplete="off"
+      id="sso-form">
+
+
+    <div class="row row-no-line-after">
+        <div class="input-field col s12 m12 l12 xl12">
+            @("Autenticazione in corso...")
+        </div>
+    </div>
+
+    <input type="hidden" name="@ParamsNames.AccessData" value="@Model"/>
+     
+    <input type="button" class="hidden" id="submit-sso"/>
+</form>

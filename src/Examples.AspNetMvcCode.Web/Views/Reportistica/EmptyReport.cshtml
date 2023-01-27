@@ -1,0 +1,25 @@
+﻿@model ReportEmptyViewModel
+
+@inject IMainLocalizer _localizer
+
+@{ 
+    Layout = MvcComponents.TemplateSecureAreaInnerGenericFile;
+
+    ViewData.SetTitle(Model.PageTitle);
+}
+
+@section styles
+{
+}
+@section scripts
+{
+}
+
+<partial name="@MvcComponents.SharedPartialTitlePageInSecureArea" 
+         model="@Model.PageTitle"/>
+
+<div class="row row-line-after">
+    <div class="col xl12 l12 s12 m12">
+        @Model.NoItemsMessage
+    </div>
+</div>

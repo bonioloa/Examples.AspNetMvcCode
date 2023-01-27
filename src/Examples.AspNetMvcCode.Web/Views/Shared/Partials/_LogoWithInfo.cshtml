@@ -1,0 +1,56 @@
+﻿@model InfoAndLogoViewModel
+
+@inject IMainLocalizer _localizer
+
+@{ 
+    string logoPosition = string.Empty;
+} 
+@if(Model.AdditionalLogoPath.StringHasValue())
+{
+    <div class="hide-on-large-only">
+
+        <img src="@Model.AdditionalLogoPath" alt="@Model.AdditionalLogoPathText" 
+             class="row-line-lat-margins responsive-img logo-norm-acc-limit">
+
+        <img src="@Model.LogoPath" alt="@Model.LogoAltText" 
+            class="row-line-lat-margins responsive-img logo-norm-acc-limit">
+    </div>
+
+    <div class="hide-on-med-and-down">
+        <img src="@Model.AdditionalLogoPath" alt="@Model.AdditionalLogoPathText" 
+             class="responsive-img logo-norm-acc-limit">
+        <br><br>
+        <img src="@Model.LogoPath" alt="@Model.LogoAltText" 
+                class="responsive-img logo-norm-acc-limit">
+    </div>
+}
+else
+{
+    <div class="">
+        <img src="@Model.LogoPath" alt="@Model.LogoAltText" 
+                class="responsive-img logo-norm-acc-limit">
+    </div>
+}
+
+      
+@if (Model.WebsiteLink.StringHasValue())
+{
+    string linktext = Model.WebsiteDisplayText.StringHasValue() ? Model.WebsiteDisplayText : Model.WebsiteLink;
+    <div class="hide-on-med-and-down row-line-before">
+        @_localizer[nameof(LocalizedStr.SharedFieldWebSite)]@CodeConstants.Colon
+        <a href="@Model.WebsiteLink" 
+           target="_blank">
+            @linktext
+        </a>
+    </div>
+    }
+@if (Model.Email.StringHasValue())
+{
+    string emailText = Model.EmailDisplayText.StringHasValue() ? Model.EmailDisplayText : Model.Email;
+    <div class="hide-on-med-and-down">
+        @_localizer[nameof(LocalizedStr.SharedFieldEmail)]@CodeConstants.Colon
+        <a href="mailto://@Model.Email">
+            @emailText
+        </a>
+    </div>
+}

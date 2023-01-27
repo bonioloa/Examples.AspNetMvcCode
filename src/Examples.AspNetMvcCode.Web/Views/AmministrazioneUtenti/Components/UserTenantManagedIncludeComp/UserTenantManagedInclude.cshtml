@@ -1,0 +1,37 @@
+﻿@model UserEditSupervisorViewModel
+
+@* //NOTA: un utente può essere incluso solo se è attivo, il problema di censimento non si pone per ex-responsabili
+    //in quando la verifica esistenza email e login viene fatta solo sulle utenze attive
+    //e in ogni  non dovrebbero esistere segnalanti disattivati*@
+<div class="row row-line-after">
+    <div class="col xl12 l12 s12 m12">
+        <div class="card-panel">
+            L'utente ha un profilo di utente segnalante, per essere promosso a responsabile deve essere incluso nella gestione responsabili<br />
+            <br />
+            Spiegazione:<br />
+            Potranno arrivare segnalazioni da cliente di errori durante censimento di nuovi responsabili<br />
+            Gli admin cliente non possono vedere nella ricerca gli utenti semplici nei db a registrazione per motivi di privacy dei segnalanti. <br />
+            L'errore quindi è probabilmente dovuto al tentativo di censimento di un utente la cui email è già presente su un' utenza esistente.<br />
+            Dovranno intervenire gli amministratori applicativi UF perché sono gli unici che possono vedere questi utenti e dovranno contrassegnare l'utente desiderato tramite il bottone sottostante per abilitare i campi di modifica.<br />
+            <br />
+            <br />
+            <form asp-controller="@MvcComponents.CtrlAdministrationUsersPost"
+                  asp-action="@MvcComponents.ActUserEditSupervisorIncludeInManagementPost"
+                  asp-antiforgery="true" method="post"
+                  id="form-supervisor-include-in-managed">
+
+                @*non usare id per questo campo, c'è rischio collisione con le altre form della view chiamante*@
+                <input type="hidden" name="@ParamsNames.UserId" value="@Model.UserId" />
+
+                <partial name="@MvcComponents.SharedPartialButtonsBackSubmit"
+                         model=@(
+                         new ButtonsBackSubmitViewModel()
+                         {
+                             Id = "submit-supervisor-include-in-managed",
+                             SubmitLabel = "Includi utente nella gestione responsabili",
+                             HideBackButtonComponent = true,
+                         }) />
+            </form>
+        </div>
+    </div>
+</div>

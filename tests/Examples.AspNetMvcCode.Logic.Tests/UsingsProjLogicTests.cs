@@ -1,0 +1,15 @@
+global using Ardalis.GuardClauses;
+global using AutoFixture;
+global using Bogus;
+global using Examples.AspNetMvcCode.CodeUtility;
+global using Examples.AspNetMvcCode.CodeUtility.Extensions;
+global using Examples.AspNetMvcCode.Common;
+global using Examples.AspNetMvcCode.Data;
+global using Examples.AspNetMvcCode.Logic.Test.Utils;
+global using FluentAssertions;
+global using Microsoft.AspNetCore.Html;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using Moq;
+global using System.Text;
+global using Xunit;

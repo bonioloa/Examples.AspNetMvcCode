@@ -1,0 +1,6 @@
+﻿@model FieldViewModel
+
+@*can be considered an extension of simple text field, 
+    in viewcomponent class some properties are overridden to transform input to text field with numeric formatting validation*@
+
+@await Component.InvokeAsync(typeof(FieldInputTextSimpleComp), Model)

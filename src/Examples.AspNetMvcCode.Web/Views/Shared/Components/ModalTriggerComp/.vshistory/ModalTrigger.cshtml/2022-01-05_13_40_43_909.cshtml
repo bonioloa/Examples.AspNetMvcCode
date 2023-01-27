@@ -1,0 +1,51 @@
+﻿@model ModalTriggerViewModel
+
+@{ 
+    List<string> tmpClasses = new List<string>();
+
+    if(Model.ShowAsButton)
+    {
+        tmpClasses.Add(WebAppConstants.HtmlClassButton);
+        tmpClasses.Add(Model.IsPrimaryButton 
+            ? WebAppConstants.HtmlClassButtonPrimary : WebAppConstants.HtmlClassButtonDefault);
+    }
+    if(Model.AdditionalClasses.HasValues())
+    {
+        tmpClasses.AddRange(Model.AdditionalClasses);
+    }    
+
+    string tooltipDescription = string.Empty;
+    string tooltipPosition = string.Empty;
+    if(Model.TooltipDescription.StringHasValue())
+    {
+        tmpClasses.Add(WebAppConstants.HtmlClassToolTip);
+        tooltipDescription = $"{WebAppConstants.HtmlAttrTooltipDescription}={Model.TooltipDescription}";
+        //for now, we use only this position as default
+        tooltipPosition = $"{WebAppConstants.HtmlAttrTooltipPosition}={WebAppConstants.HtmlValTop}";
+    }
+
+    string linkClasses = 
+        tmpClasses.HasValues() 
+        ? string.Join(CodeConstants.Space, tmpClasses) 
+        : string.Empty;
+    /*as dimensions classes use (magnitude descending order):
+        large (materialize)
+        , medium (materialize)
+        , small (materialize)
+        , tiny(materialize)
+    */
+    string iconClasses = 
+        Model.IconClasses.HasValues() 
+        ? string.Join(CodeConstants.Space, Model.IconClasses) 
+        : string.Empty;
+}
+
+<a href="#@Model.ModalId" 
+   class="modal-trigger @linkClasses "
+   @tooltipPosition
+   @tooltipDescription >@Model.Description
+    @if(Model.IconCode.HasValue())
+    {
+        <i class="@WebAppConstants.HtmlStandardIconClasses @iconClasses">@Model.IconCode</i>
+    }      
+</a>

@@ -1,0 +1,13 @@
+﻿@inject IMainLocalizer _localizer
+@inject IAuthorizationCustomWeb _webAuthorizationCustom
+
+@{
+    RouteViewModel routeModel = _webAuthorizationCustom.GetLandingPageRouteByRole(null, null);
+}
+
+<a asp-controller="@routeModel.Controller"
+   asp-action="@routeModel.Action"
+   asp-all-route-data="@routeModel.QueryStringValues"
+   class="@WebAppConstants.HtmlClassButton @WebAppConstants.HtmlClassButtonPrimary right show-preloader">
+    @_localizer[nameof(LocalizedStr.SharedButtonContinue)]
+</a>

@@ -1,0 +1,58 @@
+﻿@inject IMainLocalizer _localizer
+@inject IHttpContextAccessorWeb _webHttpContextAccessor
+
+@{
+    Layout = MvcComponents.LayoutMainFile;
+
+    bool showLanguageSelector = ViewData.GetShowLanguageSelector();
+    InfoAndLogo logo = ViewData.GetLogo();
+}
+@section styles
+{
+    <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+             model=@(new IncludeLocalFilesViewModel() 
+                        { 
+                            Type = IncludeType.Css
+                            , BasePath = PathsStaticFilesRoot.AppPathContentPages
+                            , FileName= "login"
+                        })/>    
+
+    @RenderSection(MvcComponents.SectionStyles) 
+}
+@section scripts
+{
+    @RenderSection(MvcComponents.SectionScripts)
+}
+
+
+
+<div class="container simple-panel-vertical-container">
+    <div class="panel-border-radius panel-content-padding background-white">
+                
+        <div class="row row-line-after">
+            <div class="col s12 m12 l12 xl12">
+
+
+                @await Component.InvokeAsync(typeof(PoliciesLinksComp))
+
+
+                @if (showLanguageSelector)
+                {
+                    <div class="right">
+
+                        @await Component.InvokeAsync(typeof(LanguageSelectorComp))
+                    </div>
+                }
+            </div>
+        </div>
+
+
+        @await Component.InvokeAsync(
+            typeof(ProductTenantInfoAndLogoComp)
+            , new InfoAndLogoInputViewModel(logo)
+        )
+
+            
+        @RenderBody()
+    </div>
+</div>

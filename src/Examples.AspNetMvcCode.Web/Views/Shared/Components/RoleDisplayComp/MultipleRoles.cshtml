@@ -1,0 +1,21 @@
+﻿@model IList<IHtmlContent>
+
+@inject IMainLocalizer _localizer
+
+<i class="@WebAppConstants.HtmlStandardIconClasses left profile-icon">@WebAppConstants.HtmlCodePermIdentity</i>
+
+<ul id="dropdown-roles" class="dropdown-content">
+    @foreach(HtmlString profileDescripton in Model)
+    {
+        <li>@profileDescripton</li>
+    }
+</ul>
+
+<a class="dropdown-trigger" 
+   href="#!" 
+   data-target="dropdown-roles">
+    <span>
+        @_localizer[nameof(LocalizedStr.SharedHeaderNavRoleShowProfiles)]
+    </span>
+    <i class="@WebAppConstants.HtmlStandardIconClasses right profile-icon">@WebAppConstants.HtmlCodeArrowDropDown</i>
+</a>

@@ -1,0 +1,693 @@
+﻿@inject IHttpContextAccessorCustom _httpContextAccessorCustomWeb
+@inject MainLocalizer _localizer
+@inject HtmlMainLocalizer _htmlLocalizer
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+@inject IOptions<WebArchitectureSettings> _optWebArchitecture
+
+
+@{
+    //(required)
+    string title = ViewData.GetTitle();
+
+
+
+    //(optional) some views require to set body classes for correct page display
+    string bodyClasses = ViewData.GetBodyClasses();
+
+
+    //this is to load client libraries only when page requires it.
+    //just centralize all libraries link references in one file and make updating less tedious
+    //(optional)
+    bool pageUsesRecaptcha = ViewData.GetUseRecaptcha();
+
+    //(optional)
+    bool pageUsesDatatablesNet = ViewData.GetUseDatatableNetJsLibrary();
+
+    //(optional)
+    bool pageUsesChartJs = ViewData.GetUseChartJsLibrary();
+
+    //optional
+    bool pageHasDynamicForm = ViewData.GetUseDynamicFormComponent();
+
+    //optional
+    bool pageUsesGridExportToFile = ;
+}
+<!DOCTYPE html>
+<html lang="@_httpContextAccessorCustomWeb.ContextLanguage" id="main-document">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge">@*ignora modalità compatibilità ie*@
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8">@*iso-8859-1*@
+        <meta name="referrer" nws-referrerpolicy="NoReferrer"/> 
+
+        <title>@title</title>
+
+        @*bookmarks icon (how to generate https://favicon.io/ ) *@
+        @if(_optProduct.Value.ProductFavIcon.StringHasValue())
+        {
+             <link rel="shortcut icon" type="image/x-icon" 
+                   href="@Url.Content(WebAppConstants.AppPathProductsFavIcons + _optProduct.Value.ProductFavIcon)" />
+        }
+       
+
+
+        @*if necessary to calculate integrity
+                go to https://www.srihash.org/*@
+
+
+
+
+        @*-----------START CSS (NOTE: don't modify linking order or pages styles will break) ---------------------------------------*@
+       
+
+        @*WARNING no integrity check available for google fonts because google change package depending on browser
+            ALSO we can't use fallback until we have a valid css property to test in remote file
+            BUT this is a minor issue because browser provide fallback fonts when remote fonts are not available
+            also google cdn should be available at all time and no customer had issue before*@
+
+        <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700,900|Open+Sans:300,400,700,900"                 
+              rel="stylesheet">
+
+        @*<link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700"
+              rel="stylesheet"
+              asp-fallback-href ="@Url.Content(WebAppConstants.AppLibOpenFonts + "playfair-display_all/index.css")" 
+              />
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700"
+              rel="stylesheet"
+              asp-fallback-href ="@Url.Content(WebAppConstants.AppLibOpenFonts + "open-sans_all/index.css")" 
+              />*@
+
+
+        
+        @*WARNING: if cdn fails, icons locally served will not display on page reload in internet explorer (after F5)
+            there is no fix for it a the moment
+            ALSO no integrity check available (same problems as fonts above)*@
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+              rel="stylesheet"
+              asp-fallback-href ="~/lib/material-design-icons-iconfont/dist/material-design-icons.css" 
+              asp-fallback-test-class="material-icons" 
+              asp-fallback-test-property="display" 
+              asp-fallback-test-value="inline-block"
+              />
+
+
+        @*remember to update ALSO javascript file below
+
+            documentation
+            https://materializecss.github.io/materialize/
+            
+            NOTE: authors not maintaining original project anymore  
+            https://github.com/dogfalo/materialize
+            https://cdnjs.com/libraries/materialize
+
+            now it has been forked to a new github where it's been maintained
+            https://github.com/materializecss/materialize
+            https://www.jsdelivr.com/package/npm/@materializecss/materialize
+            *@
+        @{
+            //need to use a string because url contains @ character, misinterpreted by razor
+            string materializeCssUrl = "https://cdn.jsdelivr.net/npm/@materializecss/materialize@1.0.0/dist/css/materialize.min.css";
+        }
+        <link href="@materializeCssUrl"
+              rel="stylesheet"
+              media="screen,projection"
+              integrity="sha256-OweaP/Ic6rsV+lysfyS4h+LM6sRwuO3euTYfr6M124g="
+              crossorigin="anonymous"
+              asp-fallback-href ="~/lib/materializecss/materialize/dist/css/materialize.min.css"
+              asp-fallback-test-class="page-footer" 
+              asp-fallback-test-property="padding-top" 
+              asp-fallback-test-value="20px"
+              asp-suppress-fallback-integrity="true"
+              />
+
+
+        @*https://cdnjs.com/libraries/flag-icon-css*@
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.5/css/flag-icons.min.css" 
+              integrity="sha512-UwbBNAFoECXUPeDhlKR3zzWU3j8ddKIQQsDOsKhXQGdiB5i3IHEXr9kXx82+gaHigbNKbTDp3VY/G6gZqva6ZQ==" 
+              crossorigin="anonymous"
+              asp-fallback-href ="~/lib/flag-icon-css/css/flag-icons.min.css"
+              asp-fallback-test-class="flag-icon" 
+              asp-fallback-test-property="position"
+              asp-fallback-test-value="relative"
+              asp-suppress-fallback-integrity="true"
+              />
+        
+
+        @if (pageUsesDatatablesNet)
+        {
+            string datatablesNetCssUrl = "https://cdn.jsdelivr.net/npm/datatables.net-dt@1.11.3/css/jquery.dataTables.min.css";
+            @*https://www.jsdelivr.com/package/npm/datatables.net
+                remember to update ALSO script below*@
+            <link rel="stylesheet"
+                  href="@datatablesNetCssUrl" 
+                  integrity="sha256-HgWqvjUnIFnIyvZfubxsrPjpr1zLvnyeR04LAO3ikmw="
+                  crossorigin="anonymous"               
+                  asp-fallback-href="~/lib/datatables.net-dt/css/jquery.dataTables.min.css"
+                  asp-fallback-test-class="dataTables_wrapper" 
+                  asp-fallback-test-property="position" 
+                  asp-fallback-test-value="relative"
+                  asp-suppress-fallback-integrity="true"
+                  />
+        }
+
+        <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+                 model=@(new IncludeLocalFilesViewModel() 
+                            { 
+                                Type = IncludeType.Css
+                                , BasePath = WebAppConstants.AppPathContentSite
+                                , FileName= "main"
+                            })/>
+        <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+                 model=@(new IncludeLocalFilesViewModel() 
+                            { 
+                                Type = IncludeType.Css
+                                , BasePath = WebAppConstants.AppPathContentThemes
+                                , FileName= _optProduct.Value.ProductDefaultTheme
+                            })/>
+
+        @*view CSS MANDATORY*@
+        @RenderSection(MvcComponents.SectionStyles) 
+
+        @*<style nws-csp-add-nonce="true"></style>*@
+        
+
+
+        @*------------START scripts------------------------------------------------------------------------------------------------*@ 
+
+        @*modernizer script must be in page head, after css files and before every js file or script
+            also the script includes a link to official website where other tests can be added or removed
+            currently this script contains all tests that must be passed to guarantee 
+            complete browser compatibility (excludes IE9 and below but allows IE10+).
+            form validation tests excludes safari versions below 10*@        
+        <script src="@Url.Content(WebAppConstants.AppPathLibsExternalComponents + "modernizr-custom.min.js")"></script>
+       
+        
+        
+
+        @*https://cdnjs.com/libraries/jquery*@
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" 
+                integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" 
+                crossorigin="anonymous"
+                asp-fallback-src="~/lib/jquery/jquery.min.js"
+                asp-fallback-test="window.jQuery"
+                asp-suppress-fallback-integrity="true"
+                >
+        </script>@*do not defer*@
+
+
+        @*remember to update the css file above
+
+            documentation
+            https://materializecss.github.io/materialize/
+            
+            NOTE: authors not maintaining original project anymore  
+            https://github.com/dogfalo/materialize
+            https://cdnjs.com/libraries/materialize
+
+            now it has been forked to a new github where it's been maintained
+            https://github.com/materializecss/materialize
+            https://www.jsdelivr.com/package/npm/@materializecss/materialize
+            
+            *@
+        @{
+            //need to use a string because url contains @ character, misinterpreted by razor
+            string materializeJsUrl = "https://cdn.jsdelivr.net/npm/@materializecss/materialize@1.0.0/dist/js/materialize.min.js";
+        }
+        <script src="@materializeJsUrl" 
+                integrity="sha256-U/cHDMTIHCeMcvehBv1xQ052bPSbJtbuiw4QA9cTKz0=" 
+                crossorigin="anonymous"
+                asp-fallback-src="~/lib/materializecss/materialize/dist/js/materialize.min.js"
+                asp-fallback-test="window.M"
+                asp-suppress-fallback-integrity="true"
+                ></script>@*do not defer*@
+
+
+        @*https://cdnjs.com/libraries/immutable*@
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.2/immutable.min.js" 
+                integrity="sha512-myCdDiGJRYrvRb/VuJ67ljifYTJdc1jdEvL4c4ftX9o3N6EAnmD83c/7l2/91RCINZ7c8w21tiXDT7RDFjdc3g==" 
+                crossorigin="anonymous"
+                asp-fallback-src="~/lib/immutable/immutable.min.js"
+                asp-fallback-test="window.Immutable"
+                asp-suppress-fallback-integrity="true"
+                ></script> @*do not defer*@
+
+        @*setup localization for materialize components
+            more info https://stackoverflow.com/questions/45155907/change-language-of-datepicker-in-materialize-css*@
+        <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+                 model=@(new IncludeLocalFilesViewModel() 
+                            { 
+                                Type = IncludeType.Javascript
+                                , BasePath = WebAppConstants.AppPathScriptsComponents + "datepicker/"
+                                , FileName= "datepicker" + CodeConstants.Dot + _httpContextAccessorCustomWeb.ContextLanguage
+                            })/>
+
+
+
+        @*https://cdnjs.com/libraries/jquery-validate*@
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js" 
+                integrity="sha512-37T7leoNS06R80c8Ulq7cdCDU5MNQBwlYoy1TX/WUsLFC2eYNqtKlV0QjH7r8JpG/S0GUMZwebnVFLPd6SU5yg==" 
+                crossorigin="anonymous"
+                asp-fallback-src="~/lib/jquery-validate/jquery.validate.min.js"
+                asp-fallback-test="jQuery.validator"                
+                asp-suppress-fallback-integrity="true"
+                ></script> @*do not defer*@
+
+
+        @*add jquery-validate localization script if language != from English.
+            Custom messages will be handled in json below and site.js
+
+            WARNING: no way to test for fallback at the moment*@
+        @{ 
+            bool localizationSet = false;
+        } 
+        @if(!localizationSet 
+             &&_httpContextAccessorCustomWeb.ContextLanguage.EqualsInvariant(
+                 AppConstants.CultureEnglishIsoCode
+                 ))
+        {
+            //do nothing, eng is default localization
+            localizationSet = true;
+        }
+
+        @if(!localizationSet 
+             && _httpContextAccessorCustomWeb.ContextLanguage.EqualsInvariant(
+                 AppConstants.CultureSpanishIsoCode
+                 ))
+        {
+             localizationSet = true;
+             <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/localization/messages_es.min.js" 
+                        integrity="sha512-Ou4GV0BYVfilQlKiSHUNrsoL1nznkcZ0ljccGeWYSaK2CaVzof2XaZ5VEm5/yE/2hkzjxZngQHVwNUiIRE8yLw==" 
+                        crossorigin="anonymous"
+                        asp-fallback-src="~/lib/jquery-validate/localization/messages_es.min.js"
+                        asp-suppress-fallback-integrity="true"
+                        ></script>
+        }
+
+        @*this is the default so we don't check culture*@
+        @if(!localizationSet)
+        {
+             localizationSet = true;
+             <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/localization/messages_it.min.js" 
+                        integrity="sha512-C551dMp9aBIpsd73lweCNmnqmnUTmvq/cpW9nLjRiJ3X/BQ4aLoOZMU9JTNrcN66CetKbXTLXb22U4i1MFCvOw==" 
+                        crossorigin="anonymous"
+                        asp-fallback-src="~/lib/jquery-validate/localization/messages_it.min.js"
+                        asp-suppress-fallback-integrity="true"
+                        ></script>
+        }
+
+        @*https://cdnjs.com/libraries/js-cookie*@
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js" 
+                 integrity="sha512-Meww2sXqNHxI1+5Dyh/9KAtvI9RZSA4c1K2k5iL02oiPO/RH3Q30L3M1albtqMg50u4gRTYdV4EXOQqXEI336A==" 
+                 crossorigin="anonymous"
+                 asp-fallback-src="~/lib/js-cookie/js.cookie.min.js"
+                 asp-fallback-test="window.Cookies"                   
+                 asp-suppress-fallback-integrity="true"
+                ></script>
+
+
+        @if (pageUsesRecaptcha)
+        {
+            //add this attribute once we will add support to CSP nws-csp-add-nonce="true"
+            //source https://github.com/google/recaptcha/issues/107
+            <script src="https://www.google.com/recaptcha/api.js?hl=@_httpContextAccessorCustomWeb.ContextLanguage" async defer></script>
+        }
+
+
+
+        @if (pageUsesDatatablesNet)
+        {
+            @*https://cdnjs.com/libraries/moment.js*@
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" 
+                    integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" 
+                    crossorigin="anonymous"
+                    asp-fallback-src="~/lib/moment.js/moment.min.js"
+                    asp-fallback-test="window.moment"
+                    asp-suppress-fallback-integrity="true"
+                    ></script>
+
+            string datatablesNetJsUrl = "https://cdn.jsdelivr.net/npm/datatables.net@1.11.3/js/jquery.dataTables.min.js";
+            @*https://www.jsdelivr.com/package/npm/datatables.net
+                remember to update the css file in css section above*@
+            <script src="@datatablesNetJsUrl" 
+                    integrity="sha256-gOJ/T3VMQ0Brwz7VYrLoVAQ+NE0a5vHoj1vXI1HUIzY="
+                    crossorigin="anonymous"
+                    asp-fallback-src="~/lib/datatables.net/js/jquery.dataTables.min.js"
+                    asp-fallback-test="$.fn.dataTable"
+                    asp-suppress-fallback-integrity="true"
+                    ></script>
+
+
+            string datatablesNetJsResponsive = "https://cdn.jsdelivr.net/npm/datatables.net-responsive@2.2.9/js/dataTables.responsive.min.js";
+            @*https://www.jsdelivr.com/package/npm/datatables.net-responsive*@
+            <script src="@datatablesNetJsResponsive" 
+                    integrity="sha256-f+r2TX3KkC6avpv7F8bRhVZZO8nW7xJhmCKd6k7PqGE="
+                    crossorigin="anonymous"
+                    asp-fallback-src="~/lib/datatables.net-responsive/js/dataTables.responsive.min.js"
+                    asp-fallback-test="$.fn.dataTable.Responsive"
+                    asp-suppress-fallback-integrity="true"
+                    ></script>
+
+            string datatablesNetJsSortingDateUrl = "https://cdn.jsdelivr.net/npm/datatables.net-plugins@1.11.3/sorting/datetime-moment.js";
+            //WARNING no fallback test for plugin
+            @*https://www.jsdelivr.com/package/npm/datatables.net-plugins*@
+            <script src="@datatablesNetJsSortingDateUrl" 
+                    integrity="sha256-pKUbsVHO+V6TEHk0UNKybbquHr8rExFzVJyi7JB0P4E="
+                    crossorigin="anonymous"
+                    asp-fallback-src="~/lib/datatables.net-plugins/sorting/datetime-moment.js"
+                    asp-suppress-fallback-integrity="true"
+                    ></script>
+            @*<script src="~/lib/datatables.net-plugins/sorting/datetime-moment.js"></script>*@
+
+
+            //standard component ui message configuration
+            <script>
+                @*field sInfoPostFix is empty (original key: LocalizedStr.SearchTableConfigInfoPostFix) *@ 
+                @*VERY IMPORTANT !!!!!!!!!
+                    use only FREEZE instead of IMMUTABLE on datatable objects because datatables plugin will throw error*@
+                var SharedConstDtLocalizedMessages = Object.freeze({
+                        "sEmptyTable": "@_localizer[nameof(LocalizedStr.SearchTableConfigEmptyMessage)]",
+                        "sInfo": "@_localizer[nameof(LocalizedStr.SearchTableConfigInfoBase)]",
+                        "sInfoEmpty": "@_localizer[nameof(LocalizedStr.SearchTableConfigInfoEmpty)]",
+                        "sInfoFiltered": "@_localizer[nameof(LocalizedStr.SearchTableConfigInfoFiltered)]",
+                        "sInfoPostFix": "",
+                        "sInfoThousands": "@_localizer[nameof(LocalizedStr.SearchTableConfigInfoThousandsSeparator)]",
+                        "sLengthMenu": "@_localizer[nameof(LocalizedStr.SearchTableConfigLengthMenu)]",
+                        "sLoadingRecords": "@_localizer[nameof(LocalizedStr.SearchTableConfigLoadingRecords)]",
+                        "sProcessing": "@_localizer[nameof(LocalizedStr.SearchTableConfigProcessing)]",
+                        "sSearch": "@_localizer[nameof(LocalizedStr.SearchTableConfigSearch)]",
+                        "sZeroRecords": "@_localizer[nameof(LocalizedStr.SearchTableConfigZeroRecords)]",
+                        "oPaginate": {
+                            "sFirst": "@_localizer[nameof(LocalizedStr.SearchTableConfigBackToStartLinkText)]",
+                            "sPrevious": "@_localizer[nameof(LocalizedStr.SearchTableConfigBackToPrevious)]",
+                            "sNext": "@_localizer[nameof(LocalizedStr.SearchTableConfigGoToNextLinkText)]",
+                            "sLast": "@_localizer[nameof(LocalizedStr.SearchTableConfigGoToLastLinkText)]"
+                        },
+                        "oAria": {
+                            "sSortAscending": "@_localizer[nameof(LocalizedStr.SearchTableConfigSortAscending)]",
+                            "sSortDescending": "@_localizer[nameof(LocalizedStr.SearchTableConfigSortDescending)]"
+                        }
+                });
+            </script> 
+
+        } @*end pageUsesDatatablesNet*@
+
+
+
+        @if(pageUsesChartJs)
+        {
+            @*https://cdnjs.com/libraries/Chart.js*@
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" 
+                    integrity="sha512-TW5s0IT/IppJtu76UbysrBH9Hy/5X41OTAbQuffZFU6lQ1rdcLHzpU5BzVvr/YFykoiMYZVWlr/PX1mDcfM9Qg=="
+                    crossorigin="anonymous"
+                    asp-fallback-src="~/lib/Chart.js/Chart.min.js"
+                    asp-fallback-test="window.Chart"
+                    asp-suppress-fallback-integrity="true"
+                    ></script>
+
+            //https://cdnjs.com/libraries/chartjs-plugin-datalabels
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.0.0/chartjs-plugin-datalabels.min.js" 
+                    integrity="sha512-R/QOHLpV1Ggq22vfDAWYOaMd5RopHrJNMxi8/lJu8Oihwi4Ho4BRFeiMiCefn9rasajKjnx9/fTQ/xkWnkDACg==" 
+                    crossorigin="anonymous"
+                    asp-fallback-src="~/lib/chartjs-plugin-datalabels/chartjs-plugin-datalabels.min.js"
+                    asp-fallback-test="window.Chart"
+                    asp-suppress-fallback-integrity="true"
+                    ></script>
+        }
+
+        @if(pageUsesGridExportToFile)
+        {
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.14/jspdf.plugin.autotable.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.10.1/polyfill.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/3.8.0/exceljs.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+        }
+
+        
+        @{ 
+            //build login url for redirect
+            RouteViewModel backRoute = _httpContextAccessorCustomWeb.GetRouteForBackTenantLogin(false);
+            
+            //create localized regex for numerics. Do not accept thousands separators for now, too complicated
+            CultureInfo currentCulture = new CultureInfo(_httpContextAccessorCustomWeb.ContextLanguage);
+            string decimalSeparator = currentCulture.NumberFormat.NumberDecimalSeparator;
+            string numberValidationRegex = @$"^[\-\+]?\[0-9]+(?:[\{decimalSeparator}]\[0-9]+)?$";
+            //customize also error message, displaying the current culture decimal separator
+            //to prevent misunderstandings
+            string numericErrorMessage = (_localizer[nameof(LocalizedStr.SharedJqValErrorNumericLocalized)])
+                                            .ToString()
+                                            .Replace("#decimalSeparator#", decimalSeparator);
+        }
+        
+        @*custom JavaScript
+            IMPORTANT DO NOT USE regex shorthands like "d" for "[0-9]"
+            *@        
+        <script>//nws-csp-add-nonce="true"
+            var SharedConstSite = Immutable.Map({ 
+                'BaseRedirectUrl': '@(new HtmlString(
+                                        Url.Action(
+                                            backRoute.Action,
+                                            backRoute.Controller,
+                                            backRoute.QueryStringValues
+                                            )))',
+                'AjaxPostGenericErrorMessage': "@_htmlLocalizer[nameof(HtmlLocalization.ErrorMessageAjaxPost)]",
+
+                'RegexUser': '@Html.Raw(AppConstants.RegexUser)',
+                'SharedJqValErrorUserMessage': '@_localizer[nameof(LocalizedStr.SharedJqValErrorUserMessage)]',
+
+                'RegexPassword': '@Html.Raw(AppConstants.RegexPassword)',
+                'SharedJqValErrorPasswordMessage': '@_localizer[nameof(LocalizedStr.SharedJqValErrorPasswordMessage)]',
+
+                'RegexConfirmPassword': '@Html.Raw(AppConstants.RegexPassword)',
+                'SharedJqValErrorConfirmPasswordMessage':'@_localizer[nameof(LocalizedStr.SharedJqValErrorConfirmPasswordMessage)]',
+
+                'RegexEmail': '@Html.Raw(RegexPatterns.Email)',
+                'SharedJqValErrorEmailMessage': '@_localizer[nameof(LocalizedStr.SharedJqValErrorEmailMessage)]',
+
+                'RegexEmailSearch': '@Html.Raw(AppConstants.RegexEmailSearch)',
+                'SharedJqValErrorEmailSearchMessage': '@_localizer[nameof(LocalizedStr.SharedJqValErrorEmailSearchMessage)]',
+
+                'RegexNameSurname': '@Html.Raw(AppConstants.RegexNameSurname)',
+                'SharedJqValErrorNameSurnameMessage': '@_localizer[nameof(LocalizedStr.SharedJqValErrorNameSurnameMessage)]',
+
+                'RegexNameSurnameSearch': '@Html.Raw(AppConstants.RegexNameSurnameSearch)',
+                'SharedJqValErrorNameSurnameSearchMessage': '@_localizer[nameof(LocalizedStr.SharedJqValErrorNameSurnameSearchMessage)]',
+
+                'RegexLoginCode': '@Html.Raw(AppConstants.RegexLoginCode)',
+                'SharedJqValErrorLoginCode': '@_localizer[nameof(LocalizedStr.SharedJqValErrorReportLoginCode)]',
+
+                'RegexNumericLocalized': '@Html.Raw(numberValidationRegex)',
+                'SharedJqValErrorNumericLocalized': '@numericErrorMessage',
+
+                'RegexIsoDate': '@Html.Raw(RegexPatterns.DateOrderableInvariant)',
+                'SharedJqValErrorDateLocalized':'@_localizer[nameof(LocalizedStr.SharedJqValErrorDate)]',
+
+                'CookieBannerPoliciesDismissed': '@(_optWebArchitecture.Value.CookiesPrefix + WebAppConstants.CookieBannerDismissed)',
+                'CookieValueTrue': '@WebAppConstants.CookieValueTrue',
+                'BannerPolicies': '@WebAppConstants.BannerPolicies',
+                'TenantToken': '@ParamsNames.TenantToken', 
+
+                'SharedJqValErrorMandatoryFieldGenericHtmlMessage': '@_htmlLocalizer[nameof(HtmlLocalization.SharedJqValErrorMandatoryFieldGenericHtmlMessage)]',
+                'SharedJqValErrorMandatoryOptionField': '@_htmlLocalizer[nameof(HtmlLocalization.SharedJqValErrorMandatoryOptionField)]',
+                'SharedJqValErrorMandatoryFileField': '@_htmlLocalizer[nameof(HtmlLocalization.SharedJqValErrorMandatoryFileField)]',
+                });
+        </script>
+        <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+                 model=@(new IncludeLocalFilesViewModel() 
+                            { 
+                                Type = IncludeType.Javascript
+                                , BasePath = WebAppConstants.AppPathScriptsComponents
+                                , FileName= "utilities"
+                            })/>
+        <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+                 model=@(new IncludeLocalFilesViewModel() 
+                            { 
+                                Type = IncludeType.Javascript
+                                , BasePath = WebAppConstants.AppPathScriptsComponents
+                                , FileName= "jquery.validate.init"
+                            })/>
+        <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+                 model=@(new IncludeLocalFilesViewModel() 
+                            { 
+                                Type = IncludeType.Javascript
+                                , BasePath = WebAppConstants.AppPathScriptsSite
+                                , FileName= "site"
+                            })/>
+
+        <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+                 model=@(new IncludeLocalFilesViewModel() 
+                            { 
+                                Type = IncludeType.Javascript
+                                , BasePath = WebAppConstants.AppPathScriptsComponents
+                                , FileName= "color-distinct-generator"
+                            })/>
+
+        @if(pageHasDynamicForm)
+        {
+            <script>
+                var SharedConstFormDynamic = Immutable.Map({
+                    'OptionsCheckBox': '@FormControlType.OptionsCheckBox',
+                    'OptionsRadio': '@FormControlType.OptionsRadio',
+                    'OptionsSelect': '@FormControlType.OptionsSelect',
+                    'AttributeFieldHasOptions': '@WebAppConstants.HtmlAttrFieldHasOptions',
+                    'AttributeFieldHasRelated': '@WebAppConstants.HtmlAttrFieldHasRelated',
+                    'AttributeFieldChoiceType': '@WebAppConstants.HtmlAttrFieldChoiceType',
+                    'AttributeFieldRelatedTo': '@WebAppConstants.HtmlAttrRelatedTo',
+                    'SuffixOtherField': '@AppConstants.HtmlNameOtherFieldSuffix',
+                    'AttributeOtherField': '@WebAppConstants.HtmlAttrOtherField',
+                    'AttributeDependentField': '@WebAppConstants.HtmlAttrHasDependent',
+                    'AttributeDivLabelForField': '@WebAppConstants.HtmlAttrDivForField',
+
+                    'OptionsMultipleSelectedDescriptionsFormattedSeparator' : '@AppConstants.OptionsMultipleSelectedDescriptionsFormattedSeparator',
+                    'CheckBoxValuesSeparator': '@Html.Raw(AppConstants.OptionsMultipleSelectedValuesSeparator)',
+                    'OtherFieldAggregatedToSelectedOptionFormattedSeparator': '@AppConstants.OtherFieldAggregatedToSelectedOptionFormattedSeparator',
+
+                    'ValueAttachmentOption': '@AppConstants.FileAttachmentIdChoiceRoot',
+                    'AttributeHasAttachment': '@WebAppConstants.HtmlAttrHasAttachment',
+                    'AttributeAttachmentPathsFieldName': '@WebAppConstants.HtmlAttrAttachmentPathsFieldName',
+                    'AttributeAttachmentFieldName': '@WebAppConstants.HtmlAttrAttachmentFieldName',
+                    'AttributeAttachmentRadioId': '@WebAppConstants.HtmlAttrAttachmentRadioId',
+                    'AttributeIdFormDeleteAttachment' : '@WebAppConstants.HtmlAttrIdFormDeleteAttachment',
+
+                    'ConfirmItemAbort': '@_localizer[nameof(LocalizedStr.SharedFormDynamicAbortItemConfirmMessage)]',
+                    'ConfirmStepRollback': '@_localizer[nameof(LocalizedStr.SharedFormDynamicRollbackStepConfirmMessage)]',
+
+                    'ConfirmAttachmentDeleteMsgWithPlh': '@_htmlLocalizer[nameof(HtmlLocalization.SharedFormDynamicConfirmAttachmentDelete)]',
+                    'PlhDeleteFileName': '@AppConstants.MsgPlhDocumentDelete',
+                });
+            </script>
+            <partial name="@MvcComponents.SharedPartialIncludeMinifiableLocalFile" 
+                     model=@(new IncludeLocalFilesViewModel()
+                                {
+                                    Type = IncludeType.Javascript
+                                    , BasePath = WebAppConstants.AppPathScriptsComponents
+                                    , FileName = "form-dynamic"
+                                })/>
+        }
+
+
+        @*view scripts MANDATORY*@
+        @RenderSection(MvcComponents.SectionScripts)
+
+
+
+        @*script to be executed last*@
+        @RenderSection(MvcComponents.SectionScriptsLast, required: false)
+
+
+        <link href="~/css/devextreme/dx.light.css" rel="stylesheet" />
+        <script src="~/js/devextreme/dx.all.js"></script>
+        <script src="~/js/devextreme/aspnet/dx.aspnet.mvc.js"></script>
+        <script src="~/js/devextreme/aspnet/dx.aspnet.data.js"></script>
+    </head>
+   
+    <body class="@bodyClasses">
+
+        @*this tag will be executed if JavaScript is disabled or not supported
+            showing a blocking error requiring a javascript compliant browser*@
+        <noscript>
+            <div id="warning-no-javascript" class="no-mat-modal-msg-container">
+                <div class="no-mat-modal-msg-content">
+            
+                    <div class="no-mat-modal-msg-header no-mat-modal-msg-error">
+                        <h3 class="modal-title">@_localizer[nameof(LocalizedStr.SharedErrorNoJsTitle)]</h3>
+                    </div>
+
+                    <div class="no-mat-modal-msg-body">
+                        @_localizer[nameof(LocalizedStr.SharedErrorNoJsMessage)]
+                    </div>
+                </div>
+            </div>
+        </noscript>
+
+        
+        @* hide all this area to prevent user seeing graphic elements not ready to be shown.
+            After ready site.js will restore visibility where needed*@
+        <div id="page-wrapper" class="hidden">
+
+            @RenderSection(MvcComponents.SectionHeaderSecureArea, required: false)
+
+            <vc:app-warning></vc:app-warning>
+
+            <materialize-modal id="alertModal"
+                               class-for-behaviour="@WebAppConstants.HtmlClassModalAlert"
+                               footer-button-ok-text="@_localizer[nameof(LocalizedStr.SharedModalButtonOk)].ToString()">
+
+                <div class="row row-line-x2-before row-line-x2-after">
+                    <div class="col s12 m12 l12 xl12 modal-alert-message">
+                        placeholder
+                        @* message needs to be filled by javascript call *@
+                    </div>
+                </div>
+            </materialize-modal>
+
+            <materialize-modal id="confirmModal"
+                               title="@_localizer[nameof(LocalizedStr.SharedModalConfirmTitleAction)].ToString()"
+                               class-for-behaviour="@WebAppConstants.HtmlClassModalConfirm"
+                               footer-button-ok-text="@_localizer[nameof(LocalizedStr.SharedModalButtonOk)].ToString()"
+                               footer-button-cancel-text="@_localizer[nameof(LocalizedStr.SharedModalButtonCancel)].ToString()">
+
+                <div class="row row-line-x2-before row-line-x2-after">
+                    <div class="col s12 m12 l12 xl12 modal-confirm-message">
+                        placeholder
+                        @* message needs to be filled by javascript call *@
+                    </div>
+                </div>
+            </materialize-modal>
+
+            @RenderBody()        
+        
+            <vc:banner-policies>
+            </vc:banner-policies>
+
+            @*spinning circle to be shown while page loads*@
+            <div class="preloader-background">
+                <div class="preloader-wrapper big active">
+                    <div class="spinner-layer spinner-single-color">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @*basic javascript syntax with fallbacks because this script must work for 
+                all existing browsers, without jquery
+                Leverages modernizr browser capabilities tests to verify if browser supports
+                features used in this website
+                All tests must pass, else redirects to error page
+                Also it's here because it needs to be executed last, 
+                to be sure that all tests were executed*@
+            <script type="text/javascript"> //nws-csp-add-nonce="true" 
+                window.onload = function () {
+                    var docDiv = null;
+                    var docId = "main-document";
+                    if(document.getElementById){  //DOM
+                        docDiv = document.getElementById(docId);
+                    } else if (document.all) {    //IE
+                        docDiv = document.all[docId];
+                    } else if (document.layers){  //Netscape < 6
+                        docDiv = document.layers[docId];
+                    }
+                    if (docDiv.getAttribute("class").indexOf(" tests_no-") > 0
+                        && window.location.href.indexOf("@MvcComponents.ActNotSupportedBrowser".toLowerCase()) <= 0) {
+                        window.location.replace("@(new HtmlString(
+                                                    Url.Action(
+                                                        MvcComponents.ActNotSupportedBrowser,
+                                                        MvcComponents.CtrlErrors
+                                                        )))");
+                    }
+                };
+            </script>
+
+        </div>
+    </body>
+</html>

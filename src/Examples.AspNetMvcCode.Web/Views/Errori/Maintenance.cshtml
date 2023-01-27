@@ -1,0 +1,32 @@
+﻿@*no model and no layout for this page*@
+
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+@{
+    Layout = MvcComponents.TemplatePanelPageFile;
+
+    ViewData.SetTitle(_localizer[nameof(LocalizedStr.MaintenanceTitle)]);
+    ViewData.SetLogo(InfoAndLogo.CentralPanelLogoProduct);
+    ViewData.SetShowLanguageSelector(true);
+    ViewData.SetUseCaptcha(false);
+}
+@section styles
+{
+}
+@section scripts
+{    
+}
+
+<div class="row row-line-x4-before row-line-x3-after center">
+    <div class="col s12 m12 l12 xl12 ">
+        <h4 class="generic-secondary-title">
+            @_localizer[nameof(LocalizedStr.MaintenanceTitle)]
+        </h4>
+    </div>
+</div>
+
+<div class="row row-line-after row-line-x2-after center">
+    <div class="col s12 m12 l12 xl12 ">
+         @_htmlLocalizer[nameof(HtmlLocalization.MaintenanceMessage)]
+    </div>
+</div>

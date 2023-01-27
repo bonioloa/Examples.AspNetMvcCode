@@ -1,0 +1,56 @@
+@model PoliciesViewModel
+
+@inject IMainLocalizer _localizer
+
+
+@await Component.InvokeAsync(
+    typeof(ModalTriggerComp)
+    , new ModalTriggerViewModel()
+        {
+            ModalId = WebAppConstants.HtmlIdModalPolicies,
+            Description = string.Empty,
+            AdditionalClasses = new List<string>() { "left theme-main-color" },
+            ShowAsButton = false,
+            IsPrimaryButton = false,
+            IconCode = WebAppConstants.HtmlCodePrivacy,
+            IconClasses = new List<string>() {"small"},
+            TooltipDescription = _localizer[nameof(LocalizedStr.PoliciesPageTitle)].ToString(),
+        }
+)
+
+@*this modal can be triggered by banner policies*@
+<materialize-modal id="@WebAppConstants.HtmlIdModalPolicies" 
+                   title="@_localizer[nameof(LocalizedStr.PoliciesPageTitle)].ToString()">
+
+    <div class="row row-line-x2-before row-line-x2-after">
+        <div class="col s12 m12 l12 xl12">
+            <a href="@Url.Content(
+                            PathsStaticFilesAdditional.AppPathPrivacyPolicyNoLang
+                            + SupportedCulturesConstants.IsoCodeItalian//at this moment we don't have a translated policy
+                            + ".pdf")" 
+               target="_blank">@_localizer[nameof(LocalizedStr.PoliciesSiteLinkDescription)]</a>
+        </div>
+    </div>
+       
+    @if(Model.PrivacyPolicies.HasValues())
+    {
+        string link = string.Empty;
+        string linkText = string.Empty;
+        foreach(CompanyDocumentViewModel document in Model.PrivacyPolicies)
+        {
+            link =
+                document.Link.StartsWithInvariant("http")
+                ? document.Link
+                : Url.Content(PathsStaticFilesAdditional.AppPathStaticDocuments + document.Link);
+            linkText =
+                document.Text.StringHasValue()
+                ? document.Text
+                : document.Link;
+            <div class="row row-line-after">
+                <div class="col s12 m12 l12 xl12">
+                    <a href="@link" target="_blank">@linkText</a>                 
+                </div>
+            </div>
+        }
+    }
+</materialize-modal>

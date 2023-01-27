@@ -1,0 +1,220 @@
+﻿@model  HeaderSecureAreaViewModel
+
+@inject IMainLocalizer _localizer
+@inject IAuthorizationCustomWeb _webAuthorizationCustom
+@inject IOptionsSnapshot<ProductSettings> _optProduct
+@inject IPersonalizationWeb _webPersonalization
+
+@{
+    //one call for performance reasons
+    bool userIsLoggedWithCredentials = await _webAuthorizationCustom.UserAccessedWithLoginAndPasswordAsync().ConfigureAwait(false);
+    bool userIsLoggedInWithSso = await _webAuthorizationCustom.UserLoggedInThroughSsoAsync().ConfigureAwait(false);
+    bool tenantHasReportAdvanced = _webPersonalization.HasReportAdvanced();
+    bool userIsNotAdminOnly = !await _webAuthorizationCustom.UserIsAdminOnlyAsync().ConfigureAwait(false);
+}
+
+@*header section for role display/selection and logout*@
+@if (userIsLoggedWithCredentials)
+{
+    <nav class="nav-profile authenticated" id="nav-profile">
+        <div class="nav-wrapper">
+            <ul class="right list-account-info">
+
+                <li class="hide-on-small-only">
+
+                    @await Component.InvokeAsync(typeof(RoleDisplayComp))
+                </li>
+
+                
+                @*//password change available only for users with local credentials*@
+                @if(!userIsLoggedInWithSso)
+                {
+                    <li>
+                        <a asp-controller="@MvcComponents.CtrlAccountCredentials"
+                           asp-action="@MvcComponents.ActChangePassword"
+                           class="show-preloader">
+                            <i class="@WebAppConstants.HtmlStandardIconClasses left profile-icon ">@WebAppConstants.HtmlCodeLock</i>
+                            @_localizer[nameof(LocalizedStr.SharedHeaderNavModifyPassword)]
+                        </a>
+                    </li>
+                }
+
+                @{ 
+                    string actLogout = MvcComponents.ActLogout;
+                    string ctrlLogout = MvcComponents.CtrlAccountBase;
+                    if(userIsLoggedInWithSso)
+                    {
+                        actLogout = MvcComponents.ActSingleLogout;
+                        ctrlLogout = MvcComponents.CtrlAccessSso;
+                    }
+                }
+                <li>
+                    <a asp-controller="@ctrlLogout"
+                       asp-action="@actLogout"
+                       class="show-preloader">
+                        <i class="@WebAppConstants.HtmlStandardIconClasses left profile-icon">@WebAppConstants.HtmlCodeExitToApp</i>
+                        @_localizer[nameof(LocalizedStr.SharedHeaderNavLogout)]
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+}
+else
+{
+    <nav class="nav-profile anonymous" id="nav-profile">
+    </nav>
+}
+
+
+
+@*header section logos*@ 
+<div id="main-header">
+    <header id="top">
+        <div class="row row-no-line-after">  
+
+            <div class="col hide-on-med-and-down l4 xl3 ">
+                <img src="@Url.Content(PathsStaticFilesRoot.AppPathProductsLogoPath + _optProduct.Value.ProductLogoFileName)"
+                     alt="@_optProduct.Value.ProductLogoImageAltText"
+                     class="responsive-img common-logo" />
+            </div>
+
+            <div class="col s12 m5 l4 xl5 row-half-line-before">
+
+
+                @await Component.InvokeAsync(typeof(PoliciesLinksComp))
+
+
+                <div class="right">
+
+                    @await Component.InvokeAsync(typeof(LanguageSelectorComp))
+                </div>
+            </div>
+
+            @{ 
+                string link = Model.TenantWebsite.StringHasValue()
+                                    ? Model.TenantWebsite: "#";
+                string target = Model.TenantWebsite.StringHasValue()
+                                    ? "_blank": string.Empty;
+                string cssClass = Model.TenantWebsite.StringHasValue()
+                                    ? string.Empty : "no-pointer";
+                //don't show preloader
+            }
+            <div class="col s12 m7 l4 xl4 col-tenant-logo"> 
+                <a href="@link" 
+                    target="@target" 
+                    class="@cssClass">
+                    <img src="@(Url.Content(PathsStaticFilesAdditional.AppPathTenantsLogo + Model.TenantLogoFileName))"
+                         class="responsive-img common-logo group-logo"
+                         id="tenant_logo"
+                         />
+                </a>
+            </div>
+        </div>
+           
+    </header>
+</div>
+
+
+
+@*nav links*@  
+@if (userIsLoggedWithCredentials)
+{
+    <nav class="nav-functions gr-bl" id="nav-functions">
+        <div class="nav-wrapper">
+            <ul class="list-pages">
+
+                @if (userIsNotAdminOnly)
+                {
+                    //admin only can't open processes
+                    <li>
+                        <a asp-controller="@MvcComponents.CtrlProcesses"
+                            asp-action="@MvcComponents.ActWelcome"
+                            class="show-preloader">                        
+                            <i class="@WebAppConstants.HtmlStandardIconClasses function-icon left">@WebAppConstants.HtmlCodeAddBox</i>
+                            @_localizer[nameof(LocalizedStr.SharedHeaderNavNewItemLinkText)]
+                        </a>
+                    </li>
+                }
+
+                @if (userIsNotAdminOnly)
+                {
+                    //admin only can't search for items
+                    <li>
+                        <a asp-controller="@MvcComponents.CtrlSearch"
+                            asp-action="@MvcComponents.ActSearchNew"
+                            class="show-preloader">                        
+                            <i class="@WebAppConstants.HtmlStandardIconClasses function-icon left">@WebAppConstants.HtmlCodeSearch</i>
+                            @_localizer[nameof(LocalizedStr.SharedHeaderNavSearchPageLinkText)]
+                        </a>
+                    </li>
+                }
+
+                @if (await _webAuthorizationCustom.UserIsSupervisorAsync().ConfigureAwait(false)
+                    && userIsNotAdminOnly)
+                {
+                    //only supervisors and not admin only can see and download report
+                    <li>
+                        <ul id="dropdown-report" class="dropdown-content">
+                            <li>
+                                <a asp-controller="@MvcComponents.CtrlReporting"
+                                    asp-action="@MvcComponents.ActReportingDataExport"
+                                    class="show-preloader">                        
+                                    <i class="@WebAppConstants.HtmlStandardIconClasses function-icon left">@WebAppConstants.HtmlCodeFileDownload</i>
+                                    @_localizer[nameof(LocalizedStr.SharedHeaderNavReportDataExportPageLinkText)]
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="@MvcComponents.CtrlReporting"
+                                    asp-action="@MvcComponents.ActReportingStatistics"
+                                    class="show-preloader">                        
+                                    <i class="@WebAppConstants.HtmlStandardIconClasses function-icon left">@WebAppConstants.HtmlCodePieChart</i>
+                                    @_localizer[nameof(LocalizedStr.SharedHeaderNavReportStatisticsPageLinkText)]
+                                </a>
+                            </li>
+
+                            @if (tenantHasReportAdvanced)
+                            {
+                                <li>
+                                    <a asp-controller="@MvcComponents.CtrlReporting"
+                                        asp-action="@MvcComponents.ActReportingAdvanced"
+                                        class="show-preloader">                        
+                                        <i class="@WebAppConstants.HtmlStandardIconClasses function-icon left">@WebAppConstants.HtmlCodeFileDownload</i>
+                                        @_localizer[nameof(LocalizedStr.ReportAdvancedPageTitle)]
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+
+                        <a class="dropdown-trigger" 
+                            href="#!" 
+                            data-target="dropdown-report">
+                            <span>
+                                @_localizer[nameof(LocalizedStr.SharedHeaderNavReportPageLinkText)]
+                            </span>
+                            <i class="@WebAppConstants.HtmlStandardIconClasses right function-icon">@WebAppConstants.HtmlCodeArrowDropDown</i>
+                        </a>
+                    </li>
+                }
+
+                @if (await _webAuthorizationCustom.UserIsAdminAsync())
+                {
+                    //only admins can access administration page
+                    <li>
+                        <a asp-controller="@MvcComponents.CtrlAdministration"
+                            asp-action="@MvcComponents.ActAvailableActions"
+                            class="show-preloader">
+                            <i class="@WebAppConstants.HtmlStandardIconClasses function-icon left ">@WebAppConstants.HtmlCodeAdminPanel</i>
+                            @_localizer[nameof(LocalizedStr.SharedHeaderNavAdministration)]
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </nav>
+}
+else
+{
+    <nav class="nav-functions" id="nav-functions">
+    </nav>
+}

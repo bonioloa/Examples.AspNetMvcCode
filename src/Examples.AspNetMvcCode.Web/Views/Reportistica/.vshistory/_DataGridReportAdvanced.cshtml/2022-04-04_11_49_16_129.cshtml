@@ -1,0 +1,75 @@
+﻿@model ReportExportViewModel
+
+<div>        
+    @(Html.DevExtreme()
+        .DataGrid()
+        .ID("reportDataGrid")
+        .DataSource(new JS(Model.DataSourceGrid))
+        .KeyExpr("Index")
+        .Columns(columns => {ConfigureColumns(columns, Model.ColumnsOptionsList);})
+        .AllowColumnReordering(true)
+        .ColumnMinWidth(150)
+        .ShowRowLines(true)
+        .Scrolling( scrolling => scrolling.Mode(GridScrollingMode.Standard))
+        .Scrolling( scr => scr.ShowScrollbar(ShowScrollbarMode.Always))
+        .Scrolling( scrolling => scrolling.ColumnRenderingMode(GridColumnRenderingMode.Standard))
+        .Selection(s => s.Mode(SelectionMode.Multiple))
+        .Export(e => e.Enabled(true).AllowExportSelectedData(true))
+        .OnExporting("exporting")
+        .ShowBorders(true)
+        .AllowColumnResizing(true)
+    
+        .Grouping(e =>e.AutoExpandAll(true))
+        .GroupPanel(e =>e.Visible(true))
+
+        .RowAlternationEnabled(true)
+        .Paging(p => p.PageSize(10))
+        .Pager(p => 
+                p.ShowPageSizeSelector(true)
+                    .AllowedPageSizes(new[] { 10, 25, 50, 100 })
+            )
+        .SearchPanel(s => 
+                s.Visible(true)
+                    .HighlightCaseSensitive(true)
+            )
+        .FilterRow(f => f.Visible(true))
+        .HeaderFilter(f => f.Visible(true))
+        .ColumnChooser(c => 
+            c.Enabled(true)
+                .Mode(GridColumnChooserMode.Select)
+            )
+
+        .Toolbar(toolbar => {
+            toolbar.Items(items => {
+                items.Add().Name("groupPanel");
+                items.Add()
+                        .Location(ToolbarItemLocation.After)
+                        .Widget(w =>
+                            w.Button()
+                                .Icon("exportpdf")
+                                .Text("Esporta in PDF")
+                                .OnClick("exportToPDF")
+                            );
+                @*items.Add()
+                        .Location(ToolbarItemLocation.Before)
+                        .Widget(w =>
+                            w.Button()
+                                //.Icon("exportpdf")
+                                .Text("Save Layout")
+                                .OnClick("saveLayoutAsTemplate")
+                    );
+                items.Add()
+                        .Location(ToolbarItemLocation.Before)
+                        .Widget(w =>
+                            w.Button()
+                                //.Icon("exportpdf")
+                                .Text("Load Layout")
+                                .OnClick("loadTemplateLayout")
+                    );*@
+                items.Add().Name("exportButton");
+                items.Add().Name("columnChooserButton");
+                items.Add().Name("searchPanel");
+            });
+    })
+    )
+</div>

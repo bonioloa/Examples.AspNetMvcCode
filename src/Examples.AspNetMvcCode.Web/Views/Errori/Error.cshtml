@@ -1,0 +1,47 @@
+﻿@model ErrorViewModel
+
+@{
+    Layout = MvcComponents.TemplateSplitPageFile;
+
+    ViewData.SetTitle(Model.Title);
+    ViewData.SetLeftPanel(InfoAndLogo.LeftPanelProduct);
+    ViewData.SetRightPanel(InfoAndLogo.RightPanelLogoProduct);
+}
+@section styles
+{    
+}
+@section scripts
+{    
+}
+
+
+
+
+@if(Model.SubTitle.HasValue())
+{
+    <div class="row row-line-after">
+        <div class="col s12 m12 l12 xl12 strong">
+             @Model.SubTitle
+        </div>
+    </div>
+}
+
+
+@if(Model.Message.HasValue())
+{
+    <div class="row row-line-after">
+        <div class="col s12 m12 l12 xl12 ">
+             @Model.Message
+        </div>
+    </div>
+}
+
+
+<div class="row row-line-x2-before row-line-after"> 
+    <div class="col s12 m12 l12 xl12">
+        @await Component.InvokeAsync(
+            typeof(BackUrlComp)
+            ,new BackUrlConfigViewModel(BackUrlConfig.TenantLogin)
+        )
+    </div>
+</div>

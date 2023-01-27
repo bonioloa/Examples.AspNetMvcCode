@@ -1,0 +1,39 @@
+﻿@inject IMainLocalizer _localizer 
+
+@*javascript binded to this component is in site.js*@
+
+<div id="@WebAppConstants.BannerPolicies">
+
+    @*(COMMENTED FOR NOW)javascript events in site.js for this link*@
+    @*<a id="dismiss-banner-policies" class="dismiss" href="#banner-policies">×</a>*@ 
+
+    <div class="span-padded row-line-before">
+
+        @_localizer[nameof(LocalizedStr.BannerPoliciesMessage)]@CodeConstants.Space 
+
+        @await Component.InvokeAsync(
+            typeof(ModalTriggerComp)
+            , new ModalTriggerViewModel()
+                {
+                    ModalId = WebAppConstants.HtmlIdModalPolicies,
+                    Description = _localizer[nameof(LocalizedStr.BannerPoliciesLinkText)].ToString(),
+                    AdditionalClasses = null,
+                    ShowAsButton = false,
+                    IsPrimaryButton = false,
+                    IconCode = null,
+                    IconClasses = null,
+                    TooltipDescription = string.Empty,
+                }
+        )
+        @*link above refers to a modal already created in all pages by component PoliciesLinks*@ 
+    </div>
+
+
+    @*javascript events in site.js for this button*@
+    <button type="button" 
+            id="btn-dismiss" 
+            class="btn-dismiss @WebAppConstants.HtmlClassButton @WebAppConstants.HtmlClassButtonPrimary">
+        <span>@_localizer[nameof(LocalizedStr.BannerPoliciesButtonContinue)]</span>
+    </button>
+
+</div>

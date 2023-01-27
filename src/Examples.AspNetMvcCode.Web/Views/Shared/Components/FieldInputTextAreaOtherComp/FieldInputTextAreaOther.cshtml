@@ -1,0 +1,15 @@
+﻿@model FieldViewModel
+
+
+@*this is necessary to prevent label overlapping with previous option inputs*@
+<div class="clearfix"></div> 
+
+@{ 
+    string tmpAttrOther = $"{WebAppConstants.HtmlAttrOtherField}={Model.FieldName}";
+}
+
+
+<div class="input-field spacing-no-animation" @tmpAttrOther>
+
+    @await Component.InvokeAsync(typeof(FieldInputTextAreaComp), Model)
+</div>

@@ -1,0 +1,14 @@
+﻿global using Ardalis.GuardClauses;
+global using Microsoft.AspNetCore.Html;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.Extensions.Primitives;
+global using System;
+global using System.Collections.Generic;
+global using System.Data;
+global using System.Diagnostics.CodeAnalysis;
+global using System.Globalization;
+global using System.Linq;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
+global using System.Threading;
+global using Examples.AspNetMvcCode.CodeUtility.Extensions;

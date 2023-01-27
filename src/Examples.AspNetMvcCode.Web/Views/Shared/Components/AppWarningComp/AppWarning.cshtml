@@ -1,0 +1,29 @@
+﻿@model AppWarningViewModel 
+
+@inject IHttpContextAccessorWeb _webHttpContextAccessor
+@inject IMainLocalizer _localizer
+
+@if(_webHttpContextAccessor.ContextAction == MvcComponents.ActLoginTenant
+        || _webHttpContextAccessor.ContextAction == MvcComponents.ActLoginTenantNoLogo
+        || _webHttpContextAccessor.ContextAction == MvcComponents.ActValidateRegistrationGet)
+{
+    <input type="hidden" id="reload-on-close" value=""/>
+}
+<materialize-modal id="warningModal" 
+                   title="@Model.Title"
+                   class-for-behaviour="@WebAppConstants.HtmlClassModalWarning"
+                   footer-button-ok-text="@_localizer[nameof(LocalizedStr.SharedModalButtonOk)].ToString()">
+
+    <div class="row row-line-x3-before row-line-x3-after">
+        <div class="col s12 m12 l12 xl12">
+            @*questo per prevenire di usare Html.Raw su tutto il testo del messaggio
+            Il rischio è di aprire una vulnerabilità nel caso che il messaggio mostri degli input utente
+            o id campi editati da un malintenzionato*@
+            @foreach(string line in Model.MessageLines)
+            {
+                @line
+                <br />
+            }
+        </div>
+    </div>
+</materialize-modal>

@@ -1,0 +1,112 @@
+﻿@model FieldViewModel
+
+@inject ContextApp _contextApp;
+@inject IMainLocalizer _localizer
+@inject IHtmlMainLocalizer _htmlLocalizer
+
+@{
+    //force OPTIONAL if files were already uploaded, else use is mandatory property from field
+    bool tmpIsMandatory = Model.Attachments.HasValues() ? false : Model.IsMandatory;
+
+    string tmpMandatorySymbol =
+        tmpIsMandatory 
+            && !Model.HideMandatorySymbol 
+            && Model.Description.HasValue()
+        ? WebAppConstants.HtmlMandatorySymbol
+        : string.Empty;
+
+    bool tmpMandatoryCheckWhenEmpty = Model.IsMandatory;//keep track
+
+
+    string tmpAttributeDivForField =  
+        $"{WebAppConstants.HtmlAttrDivForField}={Model.FieldName}";
+
+    string tmpHiddenLabel = string.Empty;
+
+    if(Model.AdditionalClasses.StringHasValue()
+        && Model.AdditionalClasses.ContainsInvariant(WebAppConstants.HtmlClassHidden))
+    {
+        tmpHiddenLabel = WebAppConstants.HtmlClassHidden;
+    }
+}
+
+
+
+    @* Dynamic label can't be used with this field 
+        ALSO we prefix the mandatory symbol instead of suffixing*@
+    <div class="placeholder-field div-as-label-text-editable site-color-input-label @tmpHiddenLabel"
+         @tmpAttributeDivForField >
+        <span>@tmpMandatorySymbol @Model.Description</span>        
+    </div>
+
+    @{
+        FileInputBasicViewModel fileInputBasicModel = 
+            new()
+            {
+                IsMandatory = tmpIsMandatory,
+                IsMandatoryWhenEmpty = tmpMandatoryCheckWhenEmpty,
+                Description = _htmlLocalizer[nameof(HtmlLocalization.SharedFileAttachmentHtmlLabel)],
+                IsReadOnly = Model.IsReadOnly,
+                IsDisabled = Model.IsDisabled,
+                FieldName = Model.FieldName,
+                AdditionalClasses = new List<string>() { "attach-basic" },
+                InputFileAdditionalAttributes = null,
+                AcceptFileExtensions = null,
+            };
+    }
+    <partial name="@MvcComponents.SharedPartialFileInputBasic" 
+             model=@fileInputBasicModel/>
+
+@* inserire qui i div per creare eventi sull' onclick 
+    per fare la submit di form nascoste che cancellano i documenti
+    non possiamo inserire form qui dentro*@
+@{ 
+    IDictionary<string, string> routeVars = new Dictionary<string, string>();
+    string tmpAttrDataFormToSubmit;
+}
+    
+    <div class="row row-no-line-after row-line-x2-before">
+        <div class="col s12 m12 l12 xl12">
+            @foreach (FileAttachmentViewModel attach in Model.Attachments)
+            {
+                routeVars.Clear();
+                routeVars.Add(ParamsNames.AttachmentId, attach.Id.ToString());
+                routeVars.Add(ParamsNames.Phase, attach.Phase);
+                routeVars.Add(ParamsNames.State, attach.State);
+
+                tmpAttrDataFormToSubmit =
+                    $"{WebAppConstants.HtmlAttrIdFormDeleteAttachment}={WebAppConstants.HtmlIdFormAttDelPrefix}{attach.Id}";
+
+                //id necessary for deletion of this element from dom after delete POST
+                <div class="row row-no-line-before row-line-after" 
+                     id=@(WebAppConstants.HtmlIdElemLinkAttachDelete + WebAppUtility.BuildCodeForAttachmentDelete(attach.Id, attach.Phase, attach.State))>
+                    <div class="col s12 m12 l12 xl12">
+
+                        <a asp-controller="@MvcComponents.CtrlItemFileAttachment"
+                            asp-action="@MvcComponents.ActDownloadFormAttachment"
+                            asp-all-route-data="routeVars"
+                            target="_blank">
+	                        @attach.Name
+                        </a>
+                        @CodeConstants.Space@CodeConstants.Dash@CodeConstants.Space
+                        @_localizer[nameof(LocalizedStr.SharedAttachmentUploadLabel)]@CodeConstants.Space
+                        @attach.UploadDate.ToStringShortDate(_contextApp.GetCurrentCulture())
+                        <a href="#" 
+                           id="@("id-link-del-" + attach.Id)"
+                           class="link-form-att-del"
+                           @tmpAttrDataFormToSubmit
+                           >
+                            <i class="@WebAppConstants.HtmlStandardIconClasses small theme-main-color">@WebAppConstants.HtmlCodeDeleteForever</i>
+                            <div class="hidden">@attach.Name</div>
+                        </a>
+
+                        @*
+                            VERY IMPORTANT
+                            the forms referenced in all links generated above must be placed
+                            outside the containing form of this field
+                            *@
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
